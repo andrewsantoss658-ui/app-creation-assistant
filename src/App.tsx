@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import Onboarding from "./pages/Onboarding";
@@ -17,6 +18,7 @@ import Caderneta from "./pages/Caderneta";
 import ContasPagar from "./pages/ContasPagar";
 import FluxoCaixa from "./pages/FluxoCaixa";
 import NotFound from "./pages/NotFound";
+import EstoqueBaixoAlert from "./components/EstoqueBaixoAlert";
 
 const queryClient = new QueryClient();
 
@@ -31,16 +33,24 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<Cadastro />} />
           <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/produtos" element={<Produtos />} />
-          <Route path="/estoque" element={<Estoque />} />
-          <Route path="/vendas/nova" element={<NovaVenda />} />
-          <Route path="/pix/novo" element={<Pix />} />
-          <Route path="/relatorios" element={<Relatorios />} />
-          <Route path="/configuracoes" element={<Configuracoes />} />
-          <Route path="/caderneta" element={<Caderneta />} />
-          <Route path="/contas-pagar" element={<ContasPagar />} />
-          <Route path="/fluxo-caixa" element={<FluxoCaixa />} />
+          <Route
+            path="/dashboard"
+            element={
+              <Layout>
+                <EstoqueBaixoAlert />
+                <Dashboard />
+              </Layout>
+            }
+          />
+          <Route path="/produtos" element={<Layout><Produtos /></Layout>} />
+          <Route path="/estoque" element={<Layout><Estoque /></Layout>} />
+          <Route path="/vendas/nova" element={<Layout><NovaVenda /></Layout>} />
+          <Route path="/pix/novo" element={<Layout><Pix /></Layout>} />
+          <Route path="/relatorios" element={<Layout><Relatorios /></Layout>} />
+          <Route path="/configuracoes" element={<Layout><Configuracoes /></Layout>} />
+          <Route path="/caderneta" element={<Layout><Caderneta /></Layout>} />
+          <Route path="/contas-pagar" element={<Layout><ContasPagar /></Layout>} />
+          <Route path="/fluxo-caixa" element={<Layout><FluxoCaixa /></Layout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

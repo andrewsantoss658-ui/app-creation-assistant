@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Inbox } from "lucide-react";
+import { Inbox } from "lucide-react";
 import { getCashFlowEntries, getSales, getExpenses } from "@/lib/storage";
 import { format, startOfMonth, endOfMonth, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -58,15 +58,6 @@ export default function FluxoCaixa() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/dashboard")}
-          className="mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar
-        </Button>
-
         <div className="mb-8 text-center">
           <div className="flex items-center justify-center gap-2 mb-6">
             <div className="w-8 h-8 rounded bg-secondary flex items-center justify-center">
