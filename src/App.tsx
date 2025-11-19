@@ -12,6 +12,10 @@ import Estoque from "./pages/Estoque";
 import NovaVenda from "./pages/NovaVenda";
 import Pix from "./pages/Pix";
 import Relatorios from "./pages/Relatorios";
+import Configuracoes from "./pages/Configuracoes";
+import Caderneta from "./pages/Caderneta";
+import ContasPagar from "./pages/ContasPagar";
+import FluxoCaixa from "./pages/FluxoCaixa";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +37,10 @@ const App = () => (
           <Route path="/vendas/nova" element={<NovaVenda />} />
           <Route path="/pix/novo" element={<Pix />} />
           <Route path="/relatorios" element={<Relatorios />} />
+          <Route path="/configuracoes" element={<Configuracoes />} />
+          <Route path="/caderneta" element={<Caderneta />} />
+          <Route path="/contas-pagar" element={<ContasPagar />} />
+          <Route path="/fluxo-caixa" element={<FluxoCaixa />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
