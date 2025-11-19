@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getSales } from "@/lib/storage";
 import { getCurrentUser } from "@/lib/auth";
-import { ShoppingCart, Package, FileText, DollarSign, Plus, LogOut } from "lucide-react";
+import { ShoppingCart, Package, FileText, Plus, Users, Receipt, Wallet } from "lucide-react";
 import { toast } from "sonner";
 
 const Dashboard = () => {
@@ -45,31 +45,8 @@ const Dashboard = () => {
     setLast7DaysSales(salesByDay);
   }, [user, navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("gestum_current_user");
-    toast.success("Até logo!");
-    navigate("/login");
-  };
-
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-card border-b">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <Package className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">GESTUM</h1>
-              <p className="text-xs text-muted-foreground">Olá, {user?.name}</p>
-            </div>
-          </div>
-          <Button variant="ghost" size="icon" onClick={handleLogout}>
-            <LogOut className="w-5 h-5" />
-          </Button>
-        </div>
-      </header>
-
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-8">
         {/* Resumo do dia */}
         <Card className="bg-primary text-primary-foreground">
@@ -144,6 +121,38 @@ const Dashboard = () => {
             >
               <FileText className="w-5 h-5 mr-3" />
               <span>Ver Relatórios</span>
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
+            <Button
+              variant="secondary"
+              size="lg"
+              className="justify-start h-auto py-4"
+              onClick={() => navigate("/caderneta")}
+            >
+              <Users className="w-5 h-5 mr-3" />
+              <span>Caderneta Digital</span>
+            </Button>
+
+            <Button
+              variant="secondary"
+              size="lg"
+              className="justify-start h-auto py-4"
+              onClick={() => navigate("/contas-pagar")}
+            >
+              <Receipt className="w-5 h-5 mr-3" />
+              <span>Contas a Pagar</span>
+            </Button>
+
+            <Button
+              variant="secondary"
+              size="lg"
+              className="justify-start h-auto py-4"
+              onClick={() => navigate("/fluxo-caixa")}
+            >
+              <Wallet className="w-5 h-5 mr-3" />
+              <span>Fluxo de Caixa</span>
             </Button>
           </div>
         </div>

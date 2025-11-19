@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Plus, Calendar, ShoppingCart, Droplet, FileText, DollarSign } from "lucide-react";
+import { Plus, Calendar, ShoppingCart, Droplet, FileText, DollarSign } from "lucide-react";
 import { getExpenses, saveExpense, type Expense } from "@/lib/storage";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -105,15 +105,6 @@ export default function ContasPagar() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/dashboard")}
-          className="mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar
-        </Button>
-
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-primary font-bold text-xl">GE</span>

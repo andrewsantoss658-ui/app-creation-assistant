@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { User, Bell, HelpCircle, LogOut, ArrowLeft } from "lucide-react";
+import { User, Bell, HelpCircle, LogOut } from "lucide-react";
 import { logout } from "@/lib/auth";
 import { toast } from "@/hooks/use-toast";
 
@@ -20,15 +20,6 @@ export default function Configuracoes() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-2xl mx-auto">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/dashboard")}
-          className="mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar
-        </Button>
-
         <h1 className="text-4xl font-bold text-center mb-12">Configurações</h1>
 
         <div className="space-y-4">
