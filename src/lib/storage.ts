@@ -25,6 +25,34 @@ export interface PixCharge {
   createdAt: string;
 }
 
+export interface Client {
+  id: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  balance: number; // valor devido
+  createdAt: string;
+}
+
+export interface Expense {
+  id: string;
+  name: string;
+  amount: number;
+  dueDate: string;
+  status: "pending" | "paid" | "overdue";
+  category: string;
+  createdAt: string;
+}
+
+export interface CashFlowEntry {
+  id: string;
+  type: "entrada" | "saida";
+  amount: number;
+  description: string;
+  date: string;
+  category: string;
+}
+
 // Products
 export const getProducts = (): Product[] => {
   return JSON.parse(localStorage.getItem("gestum_products") || "[]");
@@ -98,4 +126,59 @@ export const updatePixChargeStatus = (id: string, status: "pending" | "paid") =>
     charge.status = status;
     localStorage.setItem("gestum_pix_charges", JSON.stringify(charges));
   }
+};
+
+// Clients
+export const getClients = (): Client[] => {
+  return JSON.parse(localStorage.getItem("gestum_clients") || "[]");
+};
+
+export const saveClient = (client: Client) => {
+  const clients = getClients();
+  const index = clients.findIndex(c => c.id === client.id);
+  
+  if (index >= 0) {
+    clients[index] = client;
+  } else {
+    clients.push(client);
+  }
+  
+  localStorage.setItem("gestum_clients", JSON.stringify(clients));
+};
+
+export const deleteClient = (id: string) => {
+  const clients = getClients().filter(c => c.id !== id);
+  localStorage.setItem("gestum_clients", JSON.stringify(clients));
+};
+
+// Expenses
+export const getExpenses = (): Expense[] => {
+  return JSON.parse(localStorage.getItem("gestum_expenses") || "[]");
+};
+
+export const saveExpense = (expense: Expense) => {
+  const expenses = getExpenses();
+  expenses.push(expense);
+  localStorage.setItem("gestum_expenses", JSON.stringify(expenses));
+};
+
+export const updateExpenseStatus = (id: string, status: "pending" | "paid" | "overdue") => {
+  const expenses = getExpenses();
+  const expense = expenses.find(e => e.id === id);
+  
+  if (expense) {
+    expense.status = status;
+    localStorage.setItem("gestum_expenses", JSON.stringify(expenses));
+  }
+};
+
+// Cash Flow
+export const getCashFlowEntries = (): CashFlowEntry[] => {
+  return JSON.parse(localStorage.getItem("gestum_cash_flow") || "[]");
+};
+
+export const saveCashFlowEntry = (entry: CashFlowEntry) => {
+  const entries = getCashFlowEntries();
+  entries.push(entry);
+  localStorage.setItem("gestum_cash_flow", JSON.stringify(entries));
 };
