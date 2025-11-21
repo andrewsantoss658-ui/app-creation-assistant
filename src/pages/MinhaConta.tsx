@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import { getCurrentUser, updateUser, updatePassword } from "@/lib/auth";
-import { Camera, Save } from "lucide-react";
+import { Camera, Save, ArrowLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const profileSchema = z.object({
@@ -133,6 +133,14 @@ export default function MinhaConta() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-3xl mx-auto">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/configuracoes")}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar para Configurações
+        </Button>
         <h1 className="text-4xl font-bold mb-8">Minha Conta</h1>
 
         <Card className="mb-6">
