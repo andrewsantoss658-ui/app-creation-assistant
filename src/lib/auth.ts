@@ -54,3 +54,36 @@ export const getCurrentUser = (): User | null => {
 export const isAuthenticated = (): boolean => {
   return !!getCurrentUser();
 };
+
+export const updateUser = (userId: string, updates: Partial<Omit<User, 'id'>>): boolean => {
+  const users = JSON.parse(localStorage.getItem("gestum_users") || "[]");
+  const userIndex = users.findIndex((u: User & { password: string }) => u.id === userId);
+  
+  if (userIndex === -1) return false;
+  
+  users[userIndex] = { ...users[userIndex], ...updates };
+  localStorage.setItem("gestum_users", JSON.stringify(users));
+  
+  // Update current user
+  const currentUser = getCurrentUser();
+  if (currentUser && currentUser.id === userId) {
+    const updatedCurrentUser = { ...currentUser, ...updates };
+    localStorage.setItem("gestum_current_user", JSON.stringify(updatedCurrentUser));
+  }
+  
+  return true;
+};
+
+export const updatePassword = (userId: string, currentPassword: string, newPassword: string): boolean => {
+  const users = JSON.parse(localStorage.getItem("gestum_users") || "[]");
+  const userIndex = users.findIndex((u: User & { password: string }) => 
+    u.id === userId && u.password === currentPassword
+  );
+  
+  if (userIndex === -1) return false;
+  
+  users[userIndex].password = newPassword;
+  localStorage.setItem("gestum_users", JSON.stringify(users));
+  
+  return true;
+};
