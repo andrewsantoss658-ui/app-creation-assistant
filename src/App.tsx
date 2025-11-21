@@ -15,6 +15,7 @@ import Pix from "./pages/Pix";
 import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
 import MinhaConta from "./pages/MinhaConta";
+import Notificacoes from "./pages/Notificacoes";
 import Caderneta from "./pages/Caderneta";
 import ContasPagar from "./pages/ContasPagar";
 import FluxoCaixa from "./pages/FluxoCaixa";
@@ -50,6 +51,7 @@ const App = () => (
           <Route path="/relatorios" element={<Layout><Relatorios /></Layout>} />
           <Route path="/configuracoes" element={<Layout><Configuracoes /></Layout>} />
           <Route path="/minha-conta" element={<Layout><MinhaConta /></Layout>} />
+          <Route path="/notificacoes" element={<Layout><Notificacoes /></Layout>} />
           <Route path="/caderneta" element={<Layout><Caderneta /></Layout>} />
           <Route path="/contas-pagar" element={<Layout><ContasPagar /></Layout>} />
           <Route path="/fluxo-caixa" element={<Layout><FluxoCaixa /></Layout>} />
