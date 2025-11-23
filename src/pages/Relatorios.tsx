@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getSales, getProducts } from "@/lib/storage";
+import { getSales, getProducts, getExpenses } from "@/lib/storage";
 import { getCurrentUser } from "@/lib/auth";
-import { ArrowLeft, TrendingUp, ShoppingBag, DollarSign } from "lucide-react";
+import { ArrowLeft, TrendingUp, ShoppingBag, DollarSign, Download, FileSpreadsheet } from "lucide-react";
+import { exportFinancialReportPDF, exportFinancialReportExcel } from "@/lib/export";
+import { toast } from "sonner";
 
 const Relatorios = () => {
   const navigate = useNavigate();
@@ -67,14 +69,64 @@ const Relatorios = () => {
     });
   };
 
+  const handleExportPDF = () => {
+    const sales = getSales();
+    const expenses = getExpenses();
+    const days = parseInt(period);
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    
+    const filteredSales = sales.filter(
+      sale => new Date(sale.date) >= cutoffDate
+    );
+    
+    const periodText = period === "7" ? "Últimos 7 dias" : 
+                       period === "15" ? "Últimos 15 dias" : 
+                       "Últimos 30 dias";
+    
+    exportFinancialReportPDF(filteredSales, expenses, periodText);
+    toast.success("Relatório em PDF exportado com sucesso!");
+  };
+
+  const handleExportExcel = () => {
+    const sales = getSales();
+    const expenses = getExpenses();
+    const days = parseInt(period);
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    
+    const filteredSales = sales.filter(
+      sale => new Date(sale.date) >= cutoffDate
+    );
+    
+    const periodText = period === "7" ? "Últimos 7 dias" : 
+                       period === "15" ? "Últimos 15 dias" : 
+                       "Últimos 30 dias";
+    
+    exportFinancialReportExcel(filteredSales, expenses, periodText);
+    toast.success("Relatório em Excel exportado com sucesso!");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-card border-b sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="text-xl font-bold">Relatórios</h1>
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-xl font-bold">Relatórios</h1>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportPDF}>
+              <Download className="w-4 h-4 mr-2" />
+              PDF
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExportExcel}>
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              Excel
+            </Button>
+          </div>
         </div>
       </header>
 

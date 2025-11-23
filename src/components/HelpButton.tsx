@@ -1,12 +1,17 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { WifiOff, Package, Zap } from "lucide-react";
-import { markOnboardingAsCompleted } from "@/lib/onboarding";
 
-const Onboarding = () => {
-  const navigate = useNavigate();
+export function HelpButton() {
+  const [open, setOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const slides = [
@@ -31,37 +36,52 @@ const Onboarding = () => {
     if (currentSlide < slides.length - 1) {
       setCurrentSlide(currentSlide + 1);
     } else {
-      markOnboardingAsCompleted();
-      navigate("/dashboard");
+      setOpen(false);
+      setCurrentSlide(0);
     }
   };
 
-  const handleSkip = () => {
-    markOnboardingAsCompleted();
-    navigate("/dashboard");
+  const handlePrevious = () => {
+    if (currentSlide > 0) {
+      setCurrentSlide(currentSlide - 1);
+    }
   };
 
   const CurrentIcon = slides[currentSlide].icon;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-lg">
-        <CardContent className="pt-12 pb-8">
-          <div className="text-center space-y-8">
-            <div className="mx-auto w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
-              <CurrentIcon className="w-12 h-12 text-primary" strokeWidth={1.5} />
+    <>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => setOpen(true)}
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
+        title="Guia Rápido"
+      >
+        <HelpCircle className="h-6 w-6" />
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-center text-2xl">Guia Rápido</DialogTitle>
+          </DialogHeader>
+
+          <div className="text-center space-y-6 py-4">
+            <div className="mx-auto w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
+              <CurrentIcon className="w-10 h-10 text-primary" strokeWidth={1.5} />
             </div>
             
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">
+            <div className="space-y-3">
+              <h3 className="text-xl font-bold text-foreground">
                 {slides[currentSlide].title}
-              </h2>
-              <p className="text-muted-foreground text-lg max-w-md mx-auto">
+              </h3>
+              <p className="text-muted-foreground">
                 {slides[currentSlide].description}
               </p>
             </div>
 
-            <div className="flex justify-center gap-2 pt-4">
+            <div className="flex justify-center gap-2 pt-2">
               {slides.map((_, index) => (
                 <div
                   key={index}
@@ -72,30 +92,26 @@ const Onboarding = () => {
               ))}
             </div>
 
-            <div className="flex gap-3 pt-6">
-              {currentSlide < slides.length - 1 && (
+            <div className="flex gap-3 pt-4">
+              {currentSlide > 0 && (
                 <Button
                   variant="outline"
-                  size="lg"
-                  onClick={handleSkip}
+                  onClick={handlePrevious}
                   className="flex-1"
                 >
-                  Pular
+                  Anterior
                 </Button>
               )}
               <Button
-                size="lg"
                 onClick={handleNext}
                 className="flex-1"
               >
-                {currentSlide < slides.length - 1 ? "Próximo" : "Começar a Gerenciar"}
+                {currentSlide < slides.length - 1 ? "Próximo" : "Concluir"}
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
-};
-
-export default Onboarding;
+}

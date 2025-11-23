@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getProducts, Product } from "@/lib/storage";
+import { getProducts, Product, getSales } from "@/lib/storage";
 import { getCurrentUser } from "@/lib/auth";
-import { ArrowLeft, AlertTriangle } from "lucide-react";
+import { ArrowLeft, AlertTriangle, TrendingDown, Calendar } from "lucide-react";
+import { calculateStockForecast } from "@/lib/export";
 
 const Estoque = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
+  const [showForecast, setShowForecast] = useState(false);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -21,6 +23,7 @@ const Estoque = () => {
   }, [navigate]);
 
   const lowStockProducts = products.filter(p => p.quantity < 5);
+  const sales = getSales();
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,9 +35,19 @@ const Estoque = () => {
             </Button>
             <h1 className="text-xl font-bold">Controle de Estoque</h1>
           </div>
-          <Button onClick={() => navigate("/produtos")}>
-            Gerenciar Produtos
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant={showForecast ? "default" : "outline"} 
+              size="sm"
+              onClick={() => setShowForecast(!showForecast)}
+            >
+              <TrendingDown className="w-4 h-4 mr-2" />
+              Previsão
+            </Button>
+            <Button onClick={() => navigate("/produtos")}>
+              Gerenciar Produtos
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -66,34 +79,78 @@ const Estoque = () => {
           </Card>
         ) : (
           <div className="space-y-3">
-            {products.map((product) => (
-              <Card key={product.id} className={product.quantity < 5 ? "border-warning" : ""}>
-                <CardContent className="py-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold">{product.name}</h3>
-                        {product.quantity < 5 && (
-                          <Badge variant="outline" className="border-warning text-warning">
-                            Estoque Baixo
-                          </Badge>
+            {products.map((product) => {
+              const forecast = calculateStockForecast(product, sales);
+              
+              return (
+                <Card key={product.id} className={product.quantity < 5 ? "border-warning" : ""}>
+                  <CardContent className="py-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold">{product.name}</h3>
+                          {product.quantity < 5 && (
+                            <Badge variant="outline" className="border-warning text-warning">
+                              Estoque Baixo
+                            </Badge>
+                          )}
+                          {showForecast && forecast.needsRestock && (
+                            <Badge variant="outline" className="border-destructive text-destructive">
+                              <AlertTriangle className="w-3 h-3 mr-1" />
+                              Reabastecer em breve
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">{product.category}</p>
+                        
+                        {showForecast && (
+                          <div className="mt-3 p-3 bg-muted/30 rounded-lg space-y-1">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <Calendar className="w-4 h-4" />
+                              Previsão de Estoque
+                            </CardTitle>
+                            <p className="text-xs text-muted-foreground">
+                              Média de vendas: <span className="font-medium text-foreground">
+                                {forecast.averageDailySales.toFixed(1)} unid./dia
+                              </span>
+                            </p>
+                            {forecast.daysUntilStockout !== Infinity ? (
+                              <>
+                                <p className="text-xs text-muted-foreground">
+                                  Estoque acaba em: <span className={`font-medium ${
+                                    forecast.needsRestock ? "text-destructive" : "text-foreground"
+                                  }`}>
+                                    {forecast.daysUntilStockout} dias
+                                  </span>
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Data prevista: <span className="font-medium text-foreground">
+                                    {forecast.forecastDate}
+                                  </span>
+                                </p>
+                              </>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">
+                                Sem vendas recentes para previsão
+                              </p>
+                            )}
+                          </div>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">{product.category}</p>
+                      <div className="text-right ml-4">
+                        <p className="text-2xl font-bold text-foreground">
+                          {product.quantity}
+                        </p>
+                        <p className="text-xs text-muted-foreground">unidades</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          R$ {product.price.toFixed(2)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-foreground">
-                        {product.quantity}
-                      </p>
-                      <p className="text-xs text-muted-foreground">unidades</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        R$ {product.price.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </main>
