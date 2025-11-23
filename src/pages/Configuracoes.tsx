@@ -1,9 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { User, Bell, HelpCircle, LogOut } from "lucide-react";
+import { User, Bell, HelpCircle, LogOut, Moon } from "lucide-react";
 import { logout } from "@/lib/auth";
 import { toast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Configuracoes() {
   const navigate = useNavigate();
@@ -42,6 +43,18 @@ export default function Configuracoes() {
             <CardContent className="flex items-center gap-4 p-6">
               <Bell className="h-8 w-8 text-foreground" />
               <span className="text-xl font-medium">Notificações</span>
+            </CardContent>
+          </Card>
+
+          <div className="h-px bg-border" />
+
+          <Card className="hover:bg-accent transition-colors">
+            <CardContent className="flex items-center justify-between p-6">
+              <div className="flex items-center gap-4">
+                <Moon className="h-8 w-8 text-foreground" />
+                <span className="text-xl font-medium">Tema Escuro</span>
+              </div>
+              <ThemeToggle />
             </CardContent>
           </Card>
 
