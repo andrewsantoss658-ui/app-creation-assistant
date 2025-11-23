@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { register } from "@/lib/auth";
 import { Package, ArrowLeft } from "lucide-react";
+import { formatCpfCnpj, validateCpfCnpj } from "@/lib/validators";
 
 const Cadastro = () => {
   const navigate = useNavigate();
@@ -17,11 +18,21 @@ const Cadastro = () => {
   const [password, setPassword] = useState("");
   const [acceptedLGPD, setAcceptedLGPD] = useState(false);
 
+  const handleCpfCnpjChange = (value: string) => {
+    const formatted = formatCpfCnpj(value);
+    setCpfCnpj(formatted);
+  };
+
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!acceptedLGPD) {
       toast.error("Você precisa aceitar os termos da LGPD");
+      return;
+    }
+
+    if (!validateCpfCnpj(cpfCnpj)) {
+      toast.error("CPF ou CNPJ inválido");
       return;
     }
     
@@ -82,9 +93,10 @@ const Cadastro = () => {
               <Input
                 id="cpfCnpj"
                 type="text"
-                placeholder="000.000.000-00"
+                placeholder="000.000.000-00 ou 00.000.000/0000-00"
                 value={cpfCnpj}
-                onChange={(e) => setCpfCnpj(e.target.value)}
+                onChange={(e) => handleCpfCnpjChange(e.target.value)}
+                maxLength={18}
                 required
               />
             </div>
