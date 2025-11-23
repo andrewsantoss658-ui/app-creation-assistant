@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction } from "@/components/ui/alert-dialog";
-import { AlertTriangle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle, X } from "lucide-react";
 import { getProducts } from "@/lib/storage";
 
 export default function EstoqueBaixoAlert() {
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
+  const [visible, setVisible] = useState(false);
   const [lowStockProducts, setLowStockProducts] = useState<Array<{ name: string; quantity: number }>>([]);
 
   useEffect(() => {
@@ -19,43 +20,53 @@ export default function EstoqueBaixoAlert() {
     
     if (criticalProducts.length > 0) {
       setLowStockProducts(criticalProducts.map(p => ({ name: p.name, quantity: p.quantity })));
-      setOpen(true);
+      setVisible(true);
     }
   };
 
+  if (!visible || lowStockProducts.length === 0) return null;
+
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogContent className="max-w-md">
-        <AlertDialogHeader>
-          <div className="flex items-center justify-center mb-4">
-            <div className="w-24 h-24 rounded-full bg-warning/20 flex items-center justify-center">
-              <AlertTriangle className="h-12 w-12 text-warning" />
-            </div>
-          </div>
-          <AlertDialogTitle className="text-3xl font-bold text-center">
-            Estoque Baixo!
-          </AlertDialogTitle>
-          <AlertDialogDescription className="text-center text-base pt-4">
-            <p className="font-semibold text-foreground mb-2">Produtos Críticos:</p>
-            {lowStockProducts.map((product, index) => (
-              <p key={index} className="text-foreground">
-                {product.name} ({product.quantity} unid.)
-              </p>
-            ))}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogAction
-            onClick={() => {
-              setOpen(false);
-              navigate("/estoque");
-            }}
-            className="w-full h-12 text-lg"
+    <div className="p-6">
+      <Card className="border-warning bg-warning/5">
+        <CardHeader className="relative pb-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute -top-2 -right-2 h-8 w-8"
+            onClick={() => setVisible(false)}
           >
-            Verificar Estoque
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+            <X className="h-4 w-4" />
+          </Button>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-warning/20 flex items-center justify-center shrink-0">
+              <AlertTriangle className="h-6 w-6 text-warning" />
+            </div>
+            <CardTitle className="text-xl font-bold">Estoque Baixo!</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <p className="text-sm text-muted-foreground mb-3">
+            Clique em um produto para gerenciar o estoque:
+          </p>
+          <div className="space-y-2">
+            {lowStockProducts.map((product, index) => (
+              <Card
+                key={index}
+                className="cursor-pointer hover:bg-accent transition-colors border-warning/30"
+                onClick={() => navigate("/estoque")}
+              >
+                <CardContent className="p-3 flex items-center justify-between">
+                  <span className="font-medium">{product.name}</span>
+                  <span className="text-sm text-warning font-semibold">
+                    {product.quantity} unid.
+                  </span>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
