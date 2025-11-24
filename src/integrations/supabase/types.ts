@@ -14,7 +14,338 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      cash_flow: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          date: string
+          description: string
+          id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          date?: string
+          description: string
+          id?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          date?: string
+          description?: string
+          id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      clients: {
+        Row: {
+          balance: number
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          due_date: string
+          id: string
+          name: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          due_date: string
+          id?: string
+          name: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          name?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      nota_fiscal_items: {
+        Row: {
+          created_at: string
+          id: string
+          nota_fiscal_id: string
+          price: number
+          product_name: string
+          quantity: number
+          total: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nota_fiscal_id: string
+          price: number
+          product_name: string
+          quantity: number
+          total: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nota_fiscal_id?: string
+          price?: number
+          product_name?: string
+          quantity?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nota_fiscal_items_nota_fiscal_id_fkey"
+            columns: ["nota_fiscal_id"]
+            isOneToOne: false
+            referencedRelation: "notas_fiscais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notas_fiscais: {
+        Row: {
+          cliente: string
+          cpf_cnpj: string
+          created_at: string
+          emitida_em: string
+          id: string
+          numero: string
+          status: string
+          total: number
+          user_id: string
+        }
+        Insert: {
+          cliente: string
+          cpf_cnpj: string
+          created_at?: string
+          emitida_em?: string
+          id?: string
+          numero: string
+          status?: string
+          total: number
+          user_id: string
+        }
+        Update: {
+          cliente?: string
+          cpf_cnpj?: string
+          created_at?: string
+          emitida_em?: string
+          id?: string
+          numero?: string
+          status?: string
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pix_charges: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          name: string
+          price: number
+          quantity: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          name: string
+          price: number
+          quantity?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          name?: string
+          price?: number
+          quantity?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          cpf_cnpj: string
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          cpf_cnpj: string
+          created_at?: string
+          id: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          cpf_cnpj?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sale_items: {
+        Row: {
+          created_at: string
+          id: string
+          price: number
+          product_id: string
+          product_name: string
+          quantity: number
+          sale_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          price: number
+          product_id: string
+          product_name: string
+          quantity: number
+          sale_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          price?: number
+          product_id?: string
+          product_name?: string
+          quantity?: number
+          sale_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          payment_method: string
+          status: string
+          total: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          payment_method: string
+          status?: string
+          total: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          payment_method?: string
+          status?: string
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
