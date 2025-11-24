@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
+import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard,
   Package,
@@ -27,8 +28,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { logout } from "@/lib/auth";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -54,13 +54,14 @@ export function AppSidebar() {
 
   const isActive = (path: string) => currentPath === path;
 
-  const handleLogout = () => {
-    logout();
-    toast({
-      title: "Sessão encerrada",
-      description: "Você saiu com sucesso.",
-    });
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success("Sessão encerrada com sucesso");
+      navigate("/login");
+    } catch (error) {
+      toast.error("Erro ao sair");
+    }
   };
 
   return (

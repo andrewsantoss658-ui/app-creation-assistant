@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { register } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { Package, ArrowLeft } from "lucide-react";
 import { formatCpfCnpj, validateCpfCnpj } from "@/lib/validators";
 
@@ -17,13 +17,25 @@ const Cadastro = () => {
   const [cpfCnpj, setCpfCnpj] = useState("");
   const [password, setPassword] = useState("");
   const [acceptedLGPD, setAcceptedLGPD] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Verificar se já está logado
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate("/dashboard");
+      }
+    };
+    checkUser();
+  }, [navigate]);
 
   const handleCpfCnpjChange = (value: string) => {
     const formatted = formatCpfCnpj(value);
     setCpfCnpj(formatted);
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!acceptedLGPD) {
@@ -35,10 +47,46 @@ const Cadastro = () => {
       toast.error("CPF ou CNPJ inválido");
       return;
     }
-    
-    const user = register(name, email, cpfCnpj, password);
-    toast.success("Conta criada com sucesso!");
-    navigate("/onboarding");
+
+    setLoading(true);
+
+    try {
+      // Verificar se CPF/CNPJ já existe
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("cpf_cnpj", cpfCnpj)
+        .single();
+
+      if (existingProfile) {
+        toast.error("CPF/CNPJ já cadastrado no sistema");
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+          data: {
+            nome: name,
+            cpf_cnpj: cpfCnpj,
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        toast.success("Conta criada com sucesso!");
+        navigate("/onboarding");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao criar conta");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -127,8 +175,8 @@ const Cadastro = () => {
               </label>
             </div>
             
-            <Button type="submit" className="w-full" size="lg">
-              Criar conta
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? "Criando conta..." : "Criar conta"}
             </Button>
           </form>
         </CardContent>
