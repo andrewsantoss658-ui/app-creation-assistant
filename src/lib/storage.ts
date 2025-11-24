@@ -53,6 +53,17 @@ export interface CashFlowEntry {
   category: string;
 }
 
+export interface NotaFiscal {
+  id: string;
+  numero: string;
+  cliente: string;
+  cpfCnpj: string;
+  items: { productName: string; quantity: number; price: number; total: number }[];
+  total: number;
+  emitidaEm: string;
+  status: "emitida" | "cancelada";
+}
+
 // Products
 export const getProducts = (): Product[] => {
   return JSON.parse(localStorage.getItem("gestum_products") || "[]");
@@ -181,4 +192,25 @@ export const saveCashFlowEntry = (entry: CashFlowEntry) => {
   const entries = getCashFlowEntries();
   entries.push(entry);
   localStorage.setItem("gestum_cash_flow", JSON.stringify(entries));
+};
+
+// Notas Fiscais
+export const getNotasFiscais = (): NotaFiscal[] => {
+  return JSON.parse(localStorage.getItem("gestum_notas_fiscais") || "[]");
+};
+
+export const saveNotaFiscal = (nota: NotaFiscal) => {
+  const notas = getNotasFiscais();
+  notas.push(nota);
+  localStorage.setItem("gestum_notas_fiscais", JSON.stringify(notas));
+};
+
+export const updateNotaFiscalStatus = (id: string, status: "emitida" | "cancelada") => {
+  const notas = getNotasFiscais();
+  const nota = notas.find(n => n.id === id);
+  
+  if (nota) {
+    nota.status = status;
+    localStorage.setItem("gestum_notas_fiscais", JSON.stringify(notas));
+  }
 };
