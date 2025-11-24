@@ -21,6 +21,7 @@ import Suporte from "./pages/Suporte";
 import Caderneta from "./pages/Caderneta";
 import ContasPagar from "./pages/ContasPagar";
 import FluxoCaixa from "./pages/FluxoCaixa";
+import NotaFiscal from "./pages/NotaFiscal";
 import NotFound from "./pages/NotFound";
 import EstoqueBaixoAlert from "./components/EstoqueBaixoAlert";
 
@@ -59,6 +60,7 @@ const App = () => (
           <Route path="/caderneta" element={<Layout><Caderneta /></Layout>} />
           <Route path="/contas-pagar" element={<Layout><ContasPagar /></Layout>} />
           <Route path="/fluxo-caixa" element={<Layout><FluxoCaixa /></Layout>} />
+          <Route path="/nota-fiscal" element={<Layout><NotaFiscal /></Layout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

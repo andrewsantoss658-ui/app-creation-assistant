@@ -10,6 +10,7 @@ import {
   Users,
   Receipt,
   Wallet,
+  FileCheck,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -35,6 +36,7 @@ const mainItems = [
   { title: "Estoque", url: "/estoque", icon: Boxes },
   { title: "Nova Venda", url: "/vendas/nova", icon: ShoppingCart },
   { title: "Cobrança Pix", url: "/pix/novo", icon: DollarSign },
+  { title: "Nota Fiscal", url: "/nota-fiscal", icon: FileCheck },
   { title: "Relatórios", url: "/relatorios", icon: FileText },
 ];
 
