@@ -1,28 +1,56 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { login } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { Package } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Verificar se já está logado
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate("/dashboard");
+      }
+    };
+    checkUser();
+  }, [navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const user = login(email, password);
-    
-    if (user) {
-      toast.success(`Bem-vindo, ${user.name}!`);
-      navigate("/onboarding");
-    } else {
-      toast.error("Email ou senha incorretos");
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("nome")
+          .eq("id", data.user.id)
+          .single();
+
+        toast.success(`Bem-vindo, ${profile?.nome || ""}!`);
+        navigate("/dashboard");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Email ou senha incorretos");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,12 +92,22 @@ const Login = () => {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" size="lg">
-              Entrar
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
           
-          <div className="mt-6 text-center">
+          <div className="mt-4 text-center">
+            <Button
+              variant="link"
+              className="text-sm p-0 h-auto"
+              onClick={() => navigate("/recuperar-senha")}
+            >
+              Esqueceu sua senha?
+            </Button>
+          </div>
+          
+          <div className="mt-4 text-center">
             <p className="text-sm text-muted-foreground">
               Não tem uma conta?{" "}
               <Button
