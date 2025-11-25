@@ -3,57 +3,107 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { savePixCharge, getPixCharges, updatePixChargeStatus, PixCharge } from "@/lib/storage";
-import { getCurrentUser } from "@/lib/auth";
-import { ArrowLeft, QrCode, Share2, Check } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { ArrowLeft, QrCode, Share2, Check, X, Eye } from "lucide-react";
 import { toast } from "sonner";
+
+interface SaleItem {
+  product_name: string;
+  quantity: number;
+  price: number;
+}
+
+interface Sale {
+  id: string;
+  total: number;
+  payment_method: string;
+  status: string;
+  created_at: string;
+  items?: SaleItem[];
+}
 
 const Pix = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [charges, setCharges] = useState<PixCharge[]>([]);
-  const [newCharge, setNewCharge] = useState<PixCharge | null>(null);
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
-    const user = getCurrentUser();
-    if (!user) {
+    checkAuth();
+    loadSales();
+  }, [navigate]);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
       navigate("/login");
+    }
+  };
+
+  const loadSales = async () => {
+    const { data: salesData, error } = await supabase
+      .from("sales")
+      .select("*")
+      .eq("payment_method", "pix")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      toast.error("Erro ao carregar vendas");
       return;
     }
 
-    const valor = searchParams.get("valor");
-    if (valor) {
-      const charge: PixCharge = {
-        id: Math.random().toString(36).substr(2, 9),
-        amount: parseFloat(valor),
-        description: "Venda GESTUM",
-        status: "pending",
-        createdAt: new Date().toISOString(),
-      };
-      savePixCharge(charge);
-      setNewCharge(charge);
-    }
-
-    loadCharges();
-  }, [navigate, searchParams]);
-
-  const loadCharges = () => {
-    setCharges(getPixCharges().sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    ));
-  };
-
-  const handleMarkAsPaid = (id: string) => {
-    updatePixChargeStatus(id, "paid");
-    toast.success("Pagamento confirmado!");
-    loadCharges();
-    if (newCharge?.id === id) {
-      setNewCharge(null);
+    if (salesData) {
+      const salesWithItems = await Promise.all(
+        salesData.map(async (sale) => {
+          const { data: items } = await supabase
+            .from("sale_items")
+            .select("product_name, quantity, price")
+            .eq("sale_id", sale.id);
+          
+          return { ...sale, items: items || [] };
+        })
+      );
+      setSales(salesWithItems);
     }
   };
 
-  const handleShare = () => {
-    toast.success("Link copiado para compartilhar!");
+  const handleApproveSale = async (saleId: string) => {
+    const { error } = await supabase
+      .from("sales")
+      .update({ status: "completed" })
+      .eq("id", saleId);
+
+    if (error) {
+      toast.error("Erro ao aprovar pagamento");
+      return;
+    }
+
+    toast.success("Pagamento aprovado!");
+    loadSales();
+    setShowDetails(false);
+  };
+
+  const handleCancelSale = async (saleId: string) => {
+    const { error } = await supabase
+      .from("sales")
+      .update({ status: "cancelled" })
+      .eq("id", saleId);
+
+    if (error) {
+      toast.error("Erro ao cancelar venda");
+      return;
+    }
+
+    toast.success("Venda cancelada!");
+    loadSales();
+    setShowDetails(false);
+  };
+
+  const handleViewDetails = (sale: Sale) => {
+    setSelectedSale(sale);
+    setShowDetails(true);
   };
 
   return (
@@ -68,89 +118,154 @@ const Pix = () => {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        {newCharge && (
-          <Card className="border-primary">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Nova Cobrança Pix</span>
-                <Badge variant="outline" className="text-warning border-warning">
-                  Pendente
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex flex-col items-center space-y-4">
-                <div className="w-48 h-48 bg-muted rounded-lg flex items-center justify-center">
-                  <QrCode className="w-32 h-32 text-muted-foreground" />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground mb-2">Valor da cobrança</p>
-                  <p className="text-4xl font-bold text-foreground">
-                    R$ {newCharge.amount.toFixed(2)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleShare}
-                >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Compartilhar Cobrança
-                </Button>
-                <Button
-                  variant="success"
-                  className="w-full"
-                  onClick={() => handleMarkAsPaid(newCharge.id)}
-                >
-                  <Check className="w-4 h-4 mr-2" />
-                  Confirmar Pagamento
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         <Card>
           <CardHeader>
-            <CardTitle>Histórico de Cobranças</CardTitle>
+            <CardTitle>Histórico de Vendas PIX</CardTitle>
           </CardHeader>
           <CardContent>
-            {charges.length === 0 ? (
+            {sales.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                Nenhuma cobrança criada ainda
+                Nenhuma venda PIX encontrada
               </p>
             ) : (
               <div className="space-y-3">
-                {charges.map(charge => (
+                {sales.map(sale => (
                   <div
-                    key={charge.id}
-                    className="flex items-center justify-between p-4 bg-muted/30 rounded-lg"
+                    key={sale.id}
+                    className="flex items-center justify-between p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors"
                   >
-                    <div>
-                      <p className="font-semibold">R$ {charge.amount.toFixed(2)}</p>
+                    <div className="flex-1">
+                      <p className="font-semibold">R$ {Number(sale.total).toFixed(2)}</p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(charge.createdAt).toLocaleDateString()} às{" "}
-                        {new Date(charge.createdAt).toLocaleTimeString()}
+                        {new Date(sale.created_at).toLocaleDateString()} às{" "}
+                        {new Date(sale.created_at).toLocaleTimeString()}
                       </p>
                     </div>
-                    <Badge
-                      variant={charge.status === "paid" ? "default" : "outline"}
-                      className={charge.status === "paid" 
-                        ? "bg-secondary text-secondary-foreground" 
-                        : "text-warning border-warning"
-                      }
-                    >
-                      {charge.status === "paid" ? "Pago" : "Pendente"}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={
+                          sale.status === "completed" 
+                            ? "default" 
+                            : sale.status === "cancelled"
+                            ? "destructive"
+                            : "outline"
+                        }
+                        className={
+                          sale.status === "completed"
+                            ? "bg-secondary text-secondary-foreground"
+                            : sale.status === "pending"
+                            ? "text-warning border-warning"
+                            : ""
+                        }
+                      >
+                        {sale.status === "completed" 
+                          ? "Pago" 
+                          : sale.status === "cancelled"
+                          ? "Cancelada"
+                          : "Pendente"}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleViewDetails(sale)}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </CardContent>
         </Card>
+
+        <Dialog open={showDetails} onOpenChange={setShowDetails}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Detalhes da Venda</DialogTitle>
+            </DialogHeader>
+            {selectedSale && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <Badge
+                    variant={
+                      selectedSale.status === "completed"
+                        ? "default"
+                        : selectedSale.status === "cancelled"
+                        ? "destructive"
+                        : "outline"
+                    }
+                    className={
+                      selectedSale.status === "completed"
+                        ? "bg-secondary text-secondary-foreground"
+                        : selectedSale.status === "pending"
+                        ? "text-warning border-warning"
+                        : ""
+                    }
+                  >
+                    {selectedSale.status === "completed"
+                      ? "Pago"
+                      : selectedSale.status === "cancelled"
+                      ? "Cancelada"
+                      : "Pendente"}
+                  </Badge>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Itens da Venda</p>
+                  <div className="space-y-2">
+                    {selectedSale.items?.map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex justify-between p-3 bg-muted rounded-lg"
+                      >
+                        <div>
+                          <p className="font-medium">{item.product_name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {item.quantity}x R$ {Number(item.price).toFixed(2)}
+                          </p>
+                        </div>
+                        <p className="font-semibold">
+                          R$ {(item.quantity * Number(item.price)).toFixed(2)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t">
+                  <div className="flex justify-between items-center mb-4">
+                    <p className="text-lg font-semibold">Total</p>
+                    <p className="text-2xl font-bold">
+                      R$ {Number(selectedSale.total).toFixed(2)}
+                    </p>
+                  </div>
+
+                  {selectedSale.status === "pending" && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="destructive"
+                        className="flex-1"
+                        onClick={() => handleCancelSale(selectedSale.id)}
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Cancelar Venda
+                      </Button>
+                      <Button
+                        className="flex-1 bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                        onClick={() => handleApproveSale(selectedSale.id)}
+                      >
+                        <Check className="w-4 h-4 mr-2" />
+                        Aprovar Pagamento
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

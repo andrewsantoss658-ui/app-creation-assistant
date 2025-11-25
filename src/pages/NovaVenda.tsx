@@ -5,10 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getProducts, saveSale, Product } from "@/lib/storage";
-import { getCurrentUser } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Plus, Minus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
 
 interface CartItem {
   productId: string;
@@ -25,13 +31,30 @@ const NovaVenda = () => {
   const [paymentMethod, setPaymentMethod] = useState<"dinheiro" | "pix" | "cartao">("dinheiro");
 
   useEffect(() => {
-    const user = getCurrentUser();
-    if (!user) {
+    checkAuth();
+    loadProducts();
+  }, [navigate]);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
       navigate("/login");
+    }
+  };
+
+  const loadProducts = async () => {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("name");
+
+    if (error) {
+      toast.error("Erro ao carregar produtos");
       return;
     }
-    setProducts(getProducts());
-  }, [navigate]);
+
+    setProducts(data || []);
+  };
 
   const addToCart = () => {
     if (!selectedProductId) {
@@ -95,28 +118,71 @@ const NovaVenda = () => {
 
   const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-  const handleFinalizeSale = () => {
+  const handleFinalizeSale = async () => {
     if (cart.length === 0) {
       toast.error("Adicione produtos à venda");
       return;
     }
 
-    const sale = {
-      id: Math.random().toString(36).substr(2, 9),
-      date: new Date().toISOString(),
-      items: cart,
-      total,
-      paymentMethod,
-      status: "completed" as const,
-    };
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Usuário não autenticado");
+        navigate("/login");
+        return;
+      }
 
-    saveSale(sale);
-    toast.success("Venda registrada com sucesso!");
-    
-    if (paymentMethod === "pix") {
-      navigate(`/pix/novo?valor=${total}`);
-    } else {
-      navigate("/dashboard");
+      // Criar a venda
+      const { data: sale, error: saleError } = await supabase
+        .from("sales")
+        .insert({
+          user_id: session.user.id,
+          total,
+          payment_method: paymentMethod,
+          status: paymentMethod === "pix" ? "pending" : "completed",
+        })
+        .select()
+        .single();
+
+      if (saleError) throw saleError;
+
+      // Criar os itens da venda
+      const saleItems = cart.map(item => ({
+        sale_id: sale.id,
+        product_id: item.productId,
+        product_name: item.productName,
+        quantity: item.quantity,
+        price: item.price,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("sale_items")
+        .insert(saleItems);
+
+      if (itemsError) throw itemsError;
+
+      // Atualizar estoque dos produtos
+      for (const item of cart) {
+        const product = products.find(p => p.id === item.productId);
+        if (product) {
+          const { error: updateError } = await supabase
+            .from("products")
+            .update({ quantity: product.quantity - item.quantity })
+            .eq("id", item.productId);
+
+          if (updateError) throw updateError;
+        }
+      }
+
+      toast.success("Venda registrada com sucesso!");
+      
+      if (paymentMethod === "pix") {
+        navigate("/pix");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (error: any) {
+      toast.error("Erro ao registrar venda: " + error.message);
     }
   };
 
