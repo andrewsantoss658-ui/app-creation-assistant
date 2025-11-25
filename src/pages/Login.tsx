@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Package } from "lucide-react";
+import logoGestum from "@/assets/logo_gestum.jpg";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -56,11 +57,20 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="absolute top-4 right-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+      <div 
+        className="absolute inset-0 opacity-[0.03] dark:opacity-[0.02]"
+        style={{
+          backgroundImage: `url(${logoGestum})`,
+          backgroundSize: '300px 120px',
+          backgroundRepeat: 'repeat',
+          backgroundPosition: 'center',
+        }}
+      />
+      <div className="absolute top-4 right-4 z-10">
         <ThemeToggle />
       </div>
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md relative z-10">
         <CardHeader className="space-y-4 text-center">
           <div className="mx-auto w-16 h-16 bg-primary rounded-2xl flex items-center justify-center">
             <Package className="w-10 h-10 text-primary-foreground" />
