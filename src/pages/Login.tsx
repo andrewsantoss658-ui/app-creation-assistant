@@ -59,7 +59,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
       <div 
-        className="absolute inset-0 opacity-[0.03] dark:opacity-[0.02]"
+        className="absolute inset-0 opacity-[0.08] dark:opacity-[0.06]"
         style={{
           backgroundImage: `url(${logoGestum})`,
           backgroundSize: '300px 120px',
