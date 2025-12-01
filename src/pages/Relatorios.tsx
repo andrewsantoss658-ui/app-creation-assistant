@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getSales, getProducts, getExpenses } from "@/lib/storage";
-import { getCurrentUser } from "@/lib/auth";
 import { ArrowLeft, TrendingUp, ShoppingBag, DollarSign, Download, FileSpreadsheet } from "lucide-react";
 import { exportFinancialReportPDF, exportFinancialReportExcel } from "@/lib/export";
 import { toast } from "sonner";
@@ -20,13 +19,8 @@ const Relatorios = () => {
   });
 
   useEffect(() => {
-    const user = getCurrentUser();
-    if (!user) {
-      navigate("/login");
-      return;
-    }
     calculateStats();
-  }, [period, navigate]);
+  }, [period]);
 
   const calculateStats = () => {
     const sales = getSales();

@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getProducts, getNotasFiscais, saveNotaFiscal, updateNotaFiscalStatus, Product } from "@/lib/storage";
-import { getCurrentUser } from "@/lib/auth";
 import { formatCpfCnpj, validateCpfCnpj } from "@/lib/validators";
 import { ArrowLeft, FileText, Plus, Trash2, Download, X } from "lucide-react";
 import { toast } from "sonner";
@@ -35,13 +34,8 @@ const NotaFiscal = () => {
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
-    const user = getCurrentUser();
-    if (!user) {
-      navigate("/login");
-      return;
-    }
     loadData();
-  }, [navigate]);
+  }, []);
 
   const loadData = () => {
     setProducts(getProducts());

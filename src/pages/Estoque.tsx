@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getProducts, Product, getSales } from "@/lib/storage";
-import { getCurrentUser } from "@/lib/auth";
 import { ArrowLeft, AlertTriangle, TrendingDown, Calendar } from "lucide-react";
 import { calculateStockForecast } from "@/lib/export";
 
@@ -14,13 +13,8 @@ const Estoque = () => {
   const [showForecast, setShowForecast] = useState(false);
 
   useEffect(() => {
-    const user = getCurrentUser();
-    if (!user) {
-      navigate("/login");
-      return;
-    }
     setProducts(getProducts());
-  }, [navigate]);
+  }, []);
 
   const lowStockProducts = products.filter(p => p.quantity < 5);
   const sales = getSales();

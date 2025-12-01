@@ -54,17 +54,15 @@ export default function MinhaConta() {
 
   useEffect(() => {
     const currentUser = getCurrentUser();
-    if (!currentUser) {
-      navigate("/login");
-      return;
-    }
     setUser(currentUser);
     // Load avatar from localStorage
-    const savedAvatar = localStorage.getItem(`gestum_avatar_${currentUser.id}`);
-    if (savedAvatar) {
-      setAvatarUrl(savedAvatar);
+    if (currentUser) {
+      const savedAvatar = localStorage.getItem(`gestum_avatar_${currentUser.id}`);
+      if (savedAvatar) {
+        setAvatarUrl(savedAvatar);
+      }
     }
-  }, [navigate]);
+  }, []);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

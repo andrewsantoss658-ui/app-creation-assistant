@@ -2,15 +2,15 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { User, Bell, HelpCircle, LogOut, Moon } from "lucide-react";
-import { logout } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Configuracoes() {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     toast({
       title: "Sessão encerrada",
       description: "Você saiu com sucesso.",
