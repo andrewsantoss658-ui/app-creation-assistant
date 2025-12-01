@@ -31,16 +31,8 @@ const Pix = () => {
   const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
-    checkAuth();
     loadSales();
-  }, [navigate]);
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/login");
-    }
-  };
+  }, []);
 
   const loadSales = async () => {
     const { data: salesData, error } = await supabase

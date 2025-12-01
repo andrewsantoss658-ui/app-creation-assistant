@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getSales } from "@/lib/storage";
-import { getCurrentUser } from "@/lib/auth";
 import { hasCompletedOnboarding } from "@/lib/onboarding";
 import { ShoppingCart, Package, FileText, Plus, Users, Receipt, Wallet } from "lucide-react";
 import { toast } from "sonner";
@@ -12,14 +11,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [todaySales, setTodaySales] = useState(0);
   const [last7DaysSales, setLast7DaysSales] = useState<number[]>([]);
-  const user = getCurrentUser();
 
   useEffect(() => {
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-
     // Redirecionar para onboarding se não foi completado
     if (!hasCompletedOnboarding()) {
       navigate("/onboarding");
@@ -50,7 +43,7 @@ const Dashboard = () => {
     );
 
     setLast7DaysSales(salesByDay);
-  }, [user, navigate]);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-background">

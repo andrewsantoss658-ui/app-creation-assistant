@@ -31,16 +31,8 @@ const NovaVenda = () => {
   const [paymentMethod, setPaymentMethod] = useState<"dinheiro" | "pix" | "cartao">("dinheiro");
 
   useEffect(() => {
-    checkAuth();
     loadProducts();
-  }, [navigate]);
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/login");
-    }
-  };
+  }, []);
 
   const loadProducts = async () => {
     const { data, error } = await supabase
@@ -126,17 +118,12 @@ const NovaVenda = () => {
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Usuário não autenticado");
-        navigate("/login");
-        return;
-      }
 
       // Criar a venda
       const { data: sale, error: saleError } = await supabase
         .from("sales")
         .insert({
-          user_id: session.user.id,
+          user_id: session!.user.id,
           total,
           payment_method: paymentMethod,
           status: paymentMethod === "pix" ? "pending" : "completed",

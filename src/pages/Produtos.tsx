@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { getProducts, saveProduct, deleteProduct, Product } from "@/lib/storage";
-import { getCurrentUser } from "@/lib/auth";
 import { Plus, ArrowLeft, Trash2, Edit } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,13 +22,8 @@ const Produtos = () => {
   });
 
   useEffect(() => {
-    const user = getCurrentUser();
-    if (!user) {
-      navigate("/login");
-      return;
-    }
     loadProducts();
-  }, [navigate]);
+  }, []);
 
   const loadProducts = () => {
     setProducts(getProducts());
