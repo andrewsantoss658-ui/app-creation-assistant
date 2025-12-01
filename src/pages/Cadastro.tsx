@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,17 +20,6 @@ const Cadastro = () => {
   const [password, setPassword] = useState("");
   const [acceptedLGPD, setAcceptedLGPD] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    // Verificar se já está logado
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/dashboard");
-      }
-    };
-    checkUser();
-  }, [navigate]);
 
   const handleCpfCnpjChange = (value: string) => {
     const formatted = formatCpfCnpj(value);
@@ -82,7 +71,7 @@ const Cadastro = () => {
 
       if (data.user) {
         toast.success("Conta criada com sucesso!");
-        navigate("/onboarding");
+        navigate("/onboarding", { replace: true });
       }
     } catch (error: any) {
       toast.error(error.message || "Erro ao criar conta");

@@ -15,7 +15,7 @@ const Dashboard = () => {
   useEffect(() => {
     // Redirecionar para onboarding se não foi completado
     if (!hasCompletedOnboarding()) {
-      navigate("/onboarding");
+      navigate("/onboarding", { replace: true });
       return;
     }
 
