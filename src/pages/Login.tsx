@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,17 +16,6 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Verificar se já está logado
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/dashboard");
-      }
-    };
-    checkUser();
-  }, [navigate]);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -40,14 +29,19 @@ const Login = () => {
       if (error) throw error;
 
       if (data.user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("nome")
-          .eq("id", data.user.id)
-          .single();
-
-        toast.success(`Bem-vindo, ${profile?.nome || ""}!`);
-        navigate("/dashboard");
+        // Buscar perfil de forma assíncrona sem bloquear navegação
+        setTimeout(() => {
+          supabase
+            .from("profiles")
+            .select("nome")
+            .eq("id", data.user.id)
+            .maybeSingle()
+            .then(({ data: profile }) => {
+              toast.success(`Bem-vindo, ${profile?.nome || ""}!`);
+            });
+        }, 0);
+        
+        navigate("/dashboard", { replace: true });
       }
     } catch (error: any) {
       toast.error(error.message || "Email ou senha incorretos");

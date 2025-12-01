@@ -32,13 +32,13 @@ const Onboarding = () => {
       setCurrentSlide(currentSlide + 1);
     } else {
       markOnboardingAsCompleted();
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     }
   };
 
   const handleSkip = () => {
     markOnboardingAsCompleted();
-    navigate("/dashboard");
+    navigate("/dashboard", { replace: true });
   };
 
   const CurrentIcon = slides[currentSlide].icon;
