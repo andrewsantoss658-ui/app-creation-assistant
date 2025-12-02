@@ -43,11 +43,15 @@ const Cadastro = () => {
 
     try {
       // Verificar se CPF/CNPJ já existe
-      const { data: existingProfile } = await supabase
+      const { data: existingProfile, error: checkError } = await supabase
         .from("profiles")
         .select("id")
         .eq("cpf_cnpj", cpfCnpj)
-        .single();
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("Erro ao verificar CPF/CNPJ:", checkError);
+      }
 
       if (existingProfile) {
         toast.error("CPF/CNPJ já cadastrado no sistema");
