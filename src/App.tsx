@@ -26,6 +26,7 @@ import NotaFiscal from "./pages/NotaFiscal";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import NotFound from "./pages/NotFound";
 import EstoqueBaixoAlert from "./components/EstoqueBaixoAlert";
+import AdminSuportePanel from "./pages/AdminSuportePanel";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
           <Route path="/contas-pagar" element={<ProtectedRoute><Layout><ContasPagar /></Layout></ProtectedRoute>} />
           <Route path="/fluxo-caixa" element={<ProtectedRoute><Layout><FluxoCaixa /></Layout></ProtectedRoute>} />
           <Route path="/nota-fiscal" element={<ProtectedRoute><Layout><NotaFiscal /></Layout></ProtectedRoute>} />
+          <Route path="/admin/suporte" element={<ProtectedRoute><Layout><AdminSuportePanel /></Layout></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
