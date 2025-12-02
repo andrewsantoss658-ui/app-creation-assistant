@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +13,12 @@ import {
 } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, HelpCircle, MessageCircle, Send } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useSupportMessages } from "@/hooks/useSupportConversations";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const faqItems = [
   {
@@ -61,37 +66,82 @@ const faqItems = [
 export default function Suporte() {
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
-  const [chatMessages, setChatMessages] = useState<
-    { text: string; sender: "user" | "support" }[]
-  >([
-    {
-      text: "Olá! Como posso ajudá-lo hoje?",
-      sender: "support",
-    },
-  ]);
+  const [subject, setSubject] = useState("");
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [showNewConversation, setShowNewConversation] = useState(true);
+  const { messages, sendMessage } = useSupportMessages(conversationId);
 
-  const handleSendMessage = () => {
-    if (!message.trim()) return;
+  useEffect(() => {
+    loadUserConversation();
+  }, []);
 
-    // Adicionar mensagem do usuário
-    setChatMessages((prev) => [...prev, { text: message, sender: "user" }]);
+  const loadUserConversation = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    // Simular resposta automática
-    setTimeout(() => {
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          text: "Obrigado pela sua mensagem! Nossa equipe irá responder em breve. Enquanto isso, confira nossas dúvidas frequentes que podem ajudar.",
-          sender: "support",
-        },
-      ]);
-    }, 1000);
+      const { data, error } = await supabase
+        .from('support_conversations')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'open')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    setMessage("");
-    toast({
-      title: "Mensagem enviada",
-      description: "Entraremos em contato em breve.",
-    });
+      if (error && error.code !== 'PGRST116') throw error;
+
+      if (data) {
+        setConversationId(data.id);
+        setShowNewConversation(false);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar conversa:', error);
+    }
+  };
+
+  const handleStartConversation = async () => {
+    if (!subject.trim()) {
+      toast.error("Por favor, digite o assunto da sua dúvida");
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      const { data, error } = await supabase
+        .from('support_conversations')
+        .insert({
+          user_id: user.id,
+          subject: subject,
+          status: 'open',
+          priority: 'normal'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setConversationId(data.id);
+      setShowNewConversation(false);
+      toast.success("Conversa iniciada com sucesso!");
+    } catch (error) {
+      console.error('Erro ao iniciar conversa:', error);
+      toast.error("Erro ao iniciar conversa");
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!message.trim() || !conversationId) return;
+
+    try {
+      await sendMessage(message, false);
+      setMessage("");
+      toast.success("Mensagem enviada com sucesso!");
+    } catch (error) {
+      toast.error("Erro ao enviar mensagem");
+    }
   };
 
   return (
@@ -158,67 +208,114 @@ export default function Suporte() {
                 <CardTitle>Chat de Atendimento</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {/* Chat Messages */}
-                  <div className="h-96 overflow-y-auto border rounded-lg p-4 space-y-3 bg-muted/20">
-                    {chatMessages.map((msg, index) => (
-                      <div
-                        key={index}
-                        className={`flex ${
-                          msg.sender === "user" ? "justify-end" : "justify-start"
-                        }`}
-                      >
-                        <div
-                          className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                            msg.sender === "user"
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-background border"
-                          }`}
-                        >
-                          <p className="text-sm">{msg.text}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Input Area */}
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Digite sua mensagem</Label>
-                    <div className="flex gap-2">
-                      <Textarea
-                        id="message"
-                        placeholder="Como podemos ajudar você?"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSendMessage();
-                          }
-                        }}
-                        className="flex-1 min-h-[60px]"
+                {showNewConversation ? (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="subject">Assunto da sua dúvida</Label>
+                      <Input
+                        id="subject"
+                        placeholder="Ex: Dúvida sobre vendas"
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
                       />
-                      <Button
-                        onClick={handleSendMessage}
-                        className="self-end"
-                        disabled={!message.trim()}
-                      >
-                        <Send className="h-4 w-4" />
-                      </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Pressione Enter para enviar, Shift+Enter para quebrar linha
-                    </p>
+                    <Button onClick={handleStartConversation} className="w-full">
+                      Iniciar Conversa
+                    </Button>
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        Digite o assunto da sua dúvida e inicie uma conversa com nossa equipe de suporte.
+                      </p>
+                    </div>
                   </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Chat Messages */}
+                    <ScrollArea className="h-96 border rounded-lg p-4 bg-muted/20">
+                      <div className="space-y-3">
+                        {messages.length === 0 ? (
+                          <div className="text-center text-muted-foreground py-8">
+                            Nenhuma mensagem ainda. Envie a primeira mensagem!
+                          </div>
+                        ) : (
+                          messages.map((msg) => (
+                            <div
+                              key={msg.id}
+                              className={`flex ${
+                                !msg.is_staff ? "justify-end" : "justify-start"
+                              }`}
+                            >
+                              <div
+                                className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                                  !msg.is_staff
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-background border"
+                                }`}
+                              >
+                                <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                                <p className="text-xs opacity-70 mt-1">
+                                  {formatDistanceToNow(new Date(msg.created_at), {
+                                    addSuffix: true,
+                                    locale: ptBR
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </ScrollArea>
 
-                  {/* Contact Info */}
-                  <div className="mt-6 p-4 bg-muted rounded-lg">
-                    <h3 className="font-semibold mb-2">Outros canais de contato</h3>
-                    <div className="space-y-1 text-sm text-muted-foreground">
-                      <p>📧 Email: suporte@gestum.com.br</p>
-                      <p>📱 WhatsApp: (11) 98765-4321</p>
-                      <p>🕐 Horário de atendimento: Segunda a Sexta, 9h às 18h</p>
+                    {/* Input Area */}
+                    <div className="space-y-2">
+                      <Label htmlFor="message">Digite sua mensagem</Label>
+                      <div className="flex gap-2">
+                        <Textarea
+                          id="message"
+                          placeholder="Como podemos ajudar você?"
+                          value={message}
+                          onChange={(e) => setMessage(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSendMessage();
+                            }
+                          }}
+                          className="flex-1 min-h-[60px]"
+                        />
+                        <Button
+                          onClick={handleSendMessage}
+                          className="self-end"
+                          disabled={!message.trim()}
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Pressione Enter para enviar, Shift+Enter para quebrar linha
+                      </p>
                     </div>
+
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowNewConversation(true);
+                        setConversationId(null);
+                      }}
+                      className="w-full"
+                    >
+                      Iniciar Nova Conversa
+                    </Button>
+                  </div>
+                )}
+
+                {/* Contact Info */}
+                <div className="mt-6 p-4 bg-muted rounded-lg">
+                  <h3 className="font-semibold mb-2">Outros canais de contato</h3>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    <p>📧 Email: suporte@gestum.com.br</p>
+                    <p>📱 WhatsApp: (11) 98765-4321</p>
+                    <p>🕐 Horário de atendimento: Segunda a Sexta, 9h às 18h</p>
                   </div>
                 </div>
               </CardContent>
