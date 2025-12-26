@@ -9,7 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCpfCnpj, validateCpfCnpj } from "@/lib/validators";
-import { ArrowLeft, FileText, Plus, Trash2, Download, X, MapPin, Building2, User } from "lucide-react";
+import { buscarEnderecoPorCep, formatCep } from "@/lib/cep";
+import { ArrowLeft, FileText, Plus, Trash2, Download, X, MapPin, Building2, User, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -68,6 +69,8 @@ const NotaFiscal = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [notas, setNotas] = useState<NotaFiscalData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [buscandoCepEmissor, setBuscandoCepEmissor] = useState(false);
+  const [buscandoCepDestinatario, setBuscandoCepDestinatario] = useState(false);
   
   // Emissor (dados do usuário/empresa)
   const [emissor, setEmissor] = useState<EmissorData>({
@@ -165,6 +168,52 @@ const NotaFiscal = () => {
   const handleDestinatarioCpfCnpjChange = (value: string) => {
     const formatted = formatCpfCnpj(value);
     setDestinatario(prev => ({ ...prev, cpfCnpj: formatted }));
+  };
+
+  const handleEmissorCepChange = async (value: string) => {
+    const formatted = formatCep(value);
+    setEmissor(prev => ({ ...prev, cep: formatted }));
+
+    if (formatted.replace(/\D/g, "").length === 8) {
+      setBuscandoCepEmissor(true);
+      const endereco = await buscarEnderecoPorCep(formatted);
+      setBuscandoCepEmissor(false);
+
+      if (endereco) {
+        setEmissor(prev => ({
+          ...prev,
+          endereco: endereco.rua,
+          cidade: endereco.cidade,
+          estado: endereco.estado,
+        }));
+        toast.success("Endereço do emissor preenchido automaticamente!");
+      } else {
+        toast.error("CEP não encontrado");
+      }
+    }
+  };
+
+  const handleDestinatarioCepChange = async (value: string) => {
+    const formatted = formatCep(value);
+    setDestinatario(prev => ({ ...prev, cep: formatted }));
+
+    if (formatted.replace(/\D/g, "").length === 8) {
+      setBuscandoCepDestinatario(true);
+      const endereco = await buscarEnderecoPorCep(formatted);
+      setBuscandoCepDestinatario(false);
+
+      if (endereco) {
+        setDestinatario(prev => ({
+          ...prev,
+          endereco: endereco.rua,
+          cidade: endereco.cidade,
+          estado: endereco.estado,
+        }));
+        toast.success("Endereço do destinatário preenchido automaticamente!");
+      } else {
+        toast.error("CEP não encontrado");
+      }
+    }
   };
 
   const addItem = () => {
@@ -586,13 +635,18 @@ const NotaFiscal = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="emissorCep">CEP</Label>
-                  <Input
-                    id="emissorCep"
-                    value={emissor.cep}
-                    onChange={(e) => setEmissor(prev => ({ ...prev, cep: e.target.value }))}
-                    placeholder="00000-000"
-                    maxLength={9}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="emissorCep"
+                      value={emissor.cep}
+                      onChange={(e) => handleEmissorCepChange(e.target.value)}
+                      placeholder="00000-000"
+                      maxLength={9}
+                    />
+                    {buscandoCepEmissor && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="grid gap-4 md:grid-cols-4">
@@ -678,13 +732,18 @@ const NotaFiscal = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="destinatarioCep">CEP</Label>
-                  <Input
-                    id="destinatarioCep"
-                    value={destinatario.cep}
-                    onChange={(e) => setDestinatario(prev => ({ ...prev, cep: e.target.value }))}
-                    placeholder="00000-000"
-                    maxLength={9}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="destinatarioCep"
+                      value={destinatario.cep}
+                      onChange={(e) => handleDestinatarioCepChange(e.target.value)}
+                      placeholder="00000-000"
+                      maxLength={9}
+                    />
+                    {buscandoCepDestinatario && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="grid gap-4 md:grid-cols-4">
