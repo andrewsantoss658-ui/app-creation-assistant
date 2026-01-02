@@ -17,12 +17,8 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Detecta se é CPF/CNPJ ou email
+  // Detecta se é email
   const isEmail = (value: string) => value.includes("@");
-  const isCpfCnpj = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
-    return numbers.length >= 11 && numbers.length <= 14;
-  };
 
   const handleIdentifierChange = (value: string) => {
     // Se parecer com CPF/CNPJ (só números ou formatado), formata
@@ -39,43 +35,30 @@ const Login = () => {
     setLoading(true);
 
     try {
-      let emailToUse = identifier;
+      let emailToUse = identifier.trim();
 
       // Se não for email, buscar o email pelo CPF/CNPJ
       if (!isEmail(identifier)) {
         const cpfCnpjNumbers = identifier.replace(/\D/g, "");
         
-        if (!isCpfCnpj(identifier)) {
+        if (cpfCnpjNumbers.length < 11 || cpfCnpjNumbers.length > 14) {
           throw new Error("Digite um email, CPF ou CNPJ válido");
         }
 
-        // Buscar email associado ao CPF/CNPJ
+        // Buscar email associado ao CPF/CNPJ na tabela profiles
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("id")
+          .select("email")
           .eq("cpf_cnpj", cpfCnpjNumbers)
           .maybeSingle();
 
         if (profileError) throw profileError;
 
-        if (!profile) {
-          throw new Error("CPF/CNPJ não encontrado no sistema");
+        if (!profile || !profile.email) {
+          throw new Error("CPF/CNPJ não encontrado ou sem email associado");
         }
 
-        // Buscar o email do usuário via auth.users (precisamos do email)
-        // Como não temos acesso direto, vamos buscar via função RPC ou email salvo
-        // Alternativa: buscar o email via admin API ou armazenar no profile
-        
-        // Por enquanto, informamos que precisa usar email se não tivermos
-        const { data: userData } = await supabase.auth.admin?.getUserById?.(profile.id) || { data: null };
-        
-        if (!userData?.user?.email) {
-          // Tentar login direto com CPF como identificador alternativo
-          // Supabase não suporta isso nativamente, então precisamos de uma abordagem diferente
-          throw new Error("Use seu email para fazer login ou entre em contato com o suporte");
-        }
-        
-        emailToUse = userData.user.email;
+        emailToUse = profile.email;
       }
 
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -83,7 +66,12 @@ const Login = () => {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          throw new Error("Email/CPF/CNPJ ou senha incorretos");
+        }
+        throw error;
+      }
 
       if (data.user) {
         setTimeout(() => {
