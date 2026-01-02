@@ -267,12 +267,12 @@ const Produtos = () => {
               className="pl-10"
             />
           </div>
-          <Select value={filterCategory} onValueChange={setFilterCategory}>
+          <Select value={filterCategory} onValueChange={(value) => setFilterCategory(value === "all" ? "" : value)}>
             <SelectTrigger className="w-full sm:w-[200px]">
               <SelectValue placeholder="Todas categorias" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas categorias</SelectItem>
+              <SelectItem value="all">Todas categorias</SelectItem>
               {CATEGORIAS.map((cat) => (
                 <SelectItem key={cat} value={cat}>{cat}</SelectItem>
               ))}
