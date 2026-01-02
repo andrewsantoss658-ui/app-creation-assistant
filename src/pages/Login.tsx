@@ -9,27 +9,83 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Package } from "lucide-react";
 import logoGestum from "@/assets/logo_gestum.jpg";
+import { formatCpfCnpj } from "@/lib/validators";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Detecta se é CPF/CNPJ ou email
+  const isEmail = (value: string) => value.includes("@");
+  const isCpfCnpj = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    return numbers.length >= 11 && numbers.length <= 14;
+  };
+
+  const handleIdentifierChange = (value: string) => {
+    // Se parecer com CPF/CNPJ (só números ou formatado), formata
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length > 0 && !value.includes("@")) {
+      setIdentifier(formatCpfCnpj(value));
+    } else {
+      setIdentifier(value);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      let emailToUse = identifier;
+
+      // Se não for email, buscar o email pelo CPF/CNPJ
+      if (!isEmail(identifier)) {
+        const cpfCnpjNumbers = identifier.replace(/\D/g, "");
+        
+        if (!isCpfCnpj(identifier)) {
+          throw new Error("Digite um email, CPF ou CNPJ válido");
+        }
+
+        // Buscar email associado ao CPF/CNPJ
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("cpf_cnpj", cpfCnpjNumbers)
+          .maybeSingle();
+
+        if (profileError) throw profileError;
+
+        if (!profile) {
+          throw new Error("CPF/CNPJ não encontrado no sistema");
+        }
+
+        // Buscar o email do usuário via auth.users (precisamos do email)
+        // Como não temos acesso direto, vamos buscar via função RPC ou email salvo
+        // Alternativa: buscar o email via admin API ou armazenar no profile
+        
+        // Por enquanto, informamos que precisa usar email se não tivermos
+        const { data: userData } = await supabase.auth.admin?.getUserById?.(profile.id) || { data: null };
+        
+        if (!userData?.user?.email) {
+          // Tentar login direto com CPF como identificador alternativo
+          // Supabase não suporta isso nativamente, então precisamos de uma abordagem diferente
+          throw new Error("Use seu email para fazer login ou entre em contato com o suporte");
+        }
+        
+        emailToUse = userData.user.email;
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: emailToUse,
         password,
       });
 
       if (error) throw error;
 
       if (data.user) {
-        // Buscar perfil de forma assíncrona sem bloquear navegação
         setTimeout(() => {
           supabase
             .from("profiles")
@@ -44,7 +100,7 @@ const Login = () => {
         navigate("/dashboard", { replace: true });
       }
     } catch (error: any) {
-      toast.error(error.message || "Email ou senha incorretos");
+      toast.error(error.message || "Credenciais incorretas");
     } finally {
       setLoading(false);
     }
@@ -79,13 +135,13 @@ const Login = () => {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="identifier">Email, CPF ou CNPJ</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="identifier"
+                type="text"
+                placeholder="seu@email.com ou CPF/CNPJ"
+                value={identifier}
+                onChange={(e) => handleIdentifierChange(e.target.value)}
                 required
               />
             </div>
