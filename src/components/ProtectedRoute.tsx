@@ -47,7 +47,11 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!session) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-muted-foreground">Redirecionando para o login...</div>
+      </div>
+    );
   }
 
   return <>{children}</>;
