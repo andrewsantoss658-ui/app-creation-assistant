@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -35,9 +34,21 @@ const NovaVenda = () => {
   }, []);
 
   const loadProducts = async () => {
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError) {
+      toast.error("Erro ao validar sessão");
+      return;
+    }
+    if (!authData.user) {
+      toast.error("Sessão expirada. Faça login novamente.");
+      navigate("/login", { replace: true });
+      return;
+    }
+
     const { data, error } = await supabase
       .from("products")
       .select("*")
+      .eq("user_id", authData.user.id)
       .order("name");
 
     if (error) {
@@ -119,11 +130,17 @@ const NovaVenda = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
 
+      if (!session?.user) {
+        toast.error("Sessão expirada. Faça login novamente.");
+        navigate("/login", { replace: true });
+        return;
+      }
+
       // Criar a venda
       const { data: sale, error: saleError } = await supabase
         .from("sales")
         .insert({
-          user_id: session!.user.id,
+          user_id: session.user.id,
           total,
           payment_method: paymentMethod,
           status: paymentMethod === "pix" ? "pending" : "completed",
@@ -164,7 +181,7 @@ const NovaVenda = () => {
       toast.success("Venda registrada com sucesso!");
       
       if (paymentMethod === "pix") {
-        navigate("/pix");
+         navigate("/pix/novo");
       } else {
         navigate("/dashboard");
       }
@@ -192,7 +209,7 @@ const NovaVenda = () => {
           </CardHeader>
           <CardContent>
             <div className="flex gap-3">
-              <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+              <Select value={selectedProductId || undefined} onValueChange={setSelectedProductId}>
                 <SelectTrigger className="flex-1">
                   <SelectValue placeholder="Selecione um produto" />
                 </SelectTrigger>

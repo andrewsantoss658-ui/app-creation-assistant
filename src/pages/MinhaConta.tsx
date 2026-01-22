@@ -35,6 +35,9 @@ export default function MinhaConta() {
   const [user, setUser] = useState(getCurrentUser());
   const [avatarUrl, setAvatarUrl] = useState<string>("");
 
+  const displayName = user?.name?.trim() || "Usuário";
+  const displayInitial = displayName.charAt(0).toUpperCase();
+
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -126,7 +129,22 @@ export default function MinhaConta() {
     }
   };
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background p-6 flex items-center justify-center">
+        <div className="w-full max-w-md rounded-lg border bg-card p-6">
+          <h1 className="text-xl font-semibold">Sessão não encontrada</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Não foi possível carregar seus dados. Faça login novamente.
+          </p>
+          <div className="mt-4 flex gap-2">
+            <Button onClick={() => navigate("/login", { replace: true })}>Ir para Login</Button>
+            <Button variant="outline" onClick={() => navigate("/dashboard")}>Ir para Dashboard</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -147,9 +165,9 @@ export default function MinhaConta() {
           </CardHeader>
           <CardContent className="flex items-center gap-6">
             <Avatar className="h-24 w-24">
-              <AvatarImage src={avatarUrl} alt={user.name} />
+              <AvatarImage src={avatarUrl} alt={displayName} />
               <AvatarFallback className="text-2xl">
-                {user.name.charAt(0).toUpperCase()}
+                {displayInitial}
               </AvatarFallback>
             </Avatar>
             <div>

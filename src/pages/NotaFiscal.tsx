@@ -320,7 +320,9 @@ const NotaFiscal = () => {
         .select()
         .single();
 
-      if (notaError) throw notaError;
+      if (notaError || !notaData) {
+        throw notaError ?? new Error("Não foi possível salvar a nota fiscal");
+      }
 
       // Salvar itens da nota
       const notaItems = items.map(item => ({
@@ -341,10 +343,12 @@ const NotaFiscal = () => {
       for (const item of items) {
         const product = products.find(p => p.id === item.productId);
         if (product) {
-          await supabase
+          const { error: updateError } = await supabase
             .from("products")
             .update({ quantity: product.quantity - item.quantity })
             .eq("id", item.productId);
+
+          if (updateError) throw updateError;
         }
       }
 
@@ -831,7 +835,7 @@ const NotaFiscal = () => {
               <div className="flex gap-2 items-end flex-wrap">
                 <div className="flex-1 min-w-[200px] space-y-2">
                   <Label>Produto</Label>
-                  <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+                  <Select value={selectedProduct || undefined} onValueChange={setSelectedProduct}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um produto" />
                     </SelectTrigger>
