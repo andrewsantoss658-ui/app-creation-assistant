@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, ArrowLeft, Trash2, Edit, Package, Search } from "lucide-react";
 import { toast } from "sonner";
+import InvoiceReader from "@/components/InvoiceReader";
 
 interface Product {
   id: string;
@@ -150,6 +151,38 @@ const Produtos = () => {
     }
   };
 
+  const handleInvoiceProducts = async (extractedProducts: { name: string; quantity: number; price: number; category: string }[]) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+
+      let added = 0;
+      for (const p of extractedProducts) {
+        const { error } = await supabase.from("products").insert({
+          name: p.name.trim(),
+          price: p.price,
+          quantity: p.quantity,
+          category: p.category,
+          user_id: user.id,
+        });
+        if (error) {
+          console.error("Erro ao cadastrar produto:", p.name, error);
+        } else {
+          added++;
+        }
+      }
+
+      toast.success(`${added} produto(s) cadastrado(s) com sucesso!`);
+      loadProducts();
+    } catch (error) {
+      console.error("Erro ao cadastrar produtos da NF:", error);
+      toast.error("Erro ao cadastrar produtos");
+    }
+  };
+
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           product.category.toLowerCase().includes(searchTerm.toLowerCase());
@@ -176,16 +209,18 @@ const Produtos = () => {
             <Package className="w-6 h-6 text-primary" />
             <h1 className="text-xl font-bold">Produtos</h1>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => {
-                setEditingProduct(null);
-                setFormData({ name: "", price: "", quantity: "", category: "" });
-              }}>
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Produto
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <InvoiceReader onProductsConfirmed={handleInvoiceProducts} />
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => {
+                  setEditingProduct(null);
+                  setFormData({ name: "", price: "", quantity: "", category: "" });
+                }}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Produto
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>
@@ -252,7 +287,7 @@ const Produtos = () => {
               </form>
             </DialogContent>
           </Dialog>
-        </div>
+          </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
