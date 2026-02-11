@@ -90,7 +90,7 @@ export default function AdminSuportePanel() {
 
   // UI-only check for better UX - actual security is enforced by RLS policies
   // on support_conversations and support_messages tables using has_role()
-  if (!userRole || (userRole !== 'support' && userRole !== 'admin')) {
+  if (!userRole || (userRole !== 'support' && userRole !== 'admin' && userRole !== 'master')) {
     return (
       <div className="min-h-screen bg-background p-6 flex items-center justify-center">
         <Card className="max-w-md">
