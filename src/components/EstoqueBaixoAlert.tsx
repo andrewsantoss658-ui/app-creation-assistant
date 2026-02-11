@@ -42,7 +42,7 @@ export default function EstoqueBaixoAlert() {
             <div className="w-12 h-12 rounded-full bg-warning/20 flex items-center justify-center shrink-0">
               <AlertTriangle className="h-6 w-6 text-warning" />
             </div>
-            <CardTitle className="text-xl font-bold">Estoque Baixo!</CardTitle>
+            <CardTitle className="text-xl font-bold">Estoque Baixo, é Necessário abastecer!</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
