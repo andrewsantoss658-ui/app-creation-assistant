@@ -314,7 +314,7 @@ export default function Suporte() {
                   <h3 className="font-semibold mb-2">Outros canais de contato</h3>
                   <div className="space-y-1 text-sm text-muted-foreground">
                     <p>📧 Email: suporte@gestum.com.br</p>
-                    <p>📱 WhatsApp: (11) 98765-4321</p>
+                    <p>📱 WhatsApp: (71) 99738-3026</p>
                     <p>🕐 Horário de atendimento: Segunda a Sexta, 9h às 18h</p>
                   </div>
                 </div>
