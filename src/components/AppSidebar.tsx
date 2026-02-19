@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +15,8 @@ import {
   FileCheck,
   Settings,
   LogOut,
+  ShieldCheck,
+  MessageSquare,
 } from "lucide-react";
 import {
   Sidebar,
@@ -51,6 +54,21 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRole = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .single();
+      setUserRole(data?.role || null);
+    };
+    fetchRole();
+  }, []);
 
   const isActive = (path: string) => currentPath === path;
 
@@ -126,6 +144,34 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {(userRole === "master" || userRole === "support" || userRole === "admin") && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Administração</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/admin/suporte")}>
+                    <NavLink to="/admin/suporte" className="hover:bg-muted/50" activeClassName="bg-muted text-primary font-medium">
+                      <MessageSquare className="h-4 w-4" />
+                      <span>Painel de Suporte</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                {userRole === "master" && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/admin/gestao-suporte")}>
+                      <NavLink to="/admin/gestao-suporte" className="hover:bg-muted/50" activeClassName="bg-muted text-primary font-medium">
+                        <ShieldCheck className="h-4 w-4" />
+                        <span>Gestão de Suporte</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>

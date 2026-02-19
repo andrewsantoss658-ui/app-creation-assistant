@@ -349,6 +349,80 @@ export type Database = {
         }
         Relationships: []
       }
+      support_account_audit: {
+        Row: {
+          action: string
+          changed_by: string
+          created_at: string
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          support_account_id: string
+        }
+        Insert: {
+          action: string
+          changed_by: string
+          created_at?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          support_account_id: string
+        }
+        Update: {
+          action?: string
+          changed_by?: string
+          created_at?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          support_account_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_account_audit_support_account_id_fkey"
+            columns: ["support_account_id"]
+            isOneToOne: false
+            referencedRelation: "support_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_accounts: {
+        Row: {
+          access_level: string
+          created_at: string
+          created_by: string
+          email: string
+          id: string
+          is_active: boolean
+          is_linked_to_chat: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_level?: string
+          created_at?: string
+          created_by: string
+          email: string
+          id?: string
+          is_active?: boolean
+          is_linked_to_chat?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_level?: string
+          created_at?: string
+          created_by?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          is_linked_to_chat?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       support_conversations: {
         Row: {
           assigned_to: string | null
