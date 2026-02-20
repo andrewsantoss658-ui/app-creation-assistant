@@ -47,6 +47,51 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_transfers: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          from_user_id: string
+          id: string
+          reason: string | null
+          to_team_id: string | null
+          to_user_id: string | null
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          from_user_id: string
+          id?: string
+          reason?: string | null
+          to_team_id?: string | null
+          to_user_id?: string | null
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          from_user_id?: string
+          id?: string
+          reason?: string | null
+          to_team_id?: string | null
+          to_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_transfers_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_transfers_to_team_id_fkey"
+            columns: ["to_team_id"]
+            isOneToOne: false
+            referencedRelation: "support_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           balance: number
@@ -79,6 +124,45 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      conversation_tags: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          created_by: string
+          id: string
+          tag_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          tag_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_tags_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "support_tags"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       expenses: {
         Row: {
@@ -426,35 +510,87 @@ export type Database = {
       support_conversations: {
         Row: {
           assigned_to: string | null
+          closed_at: string | null
           created_at: string | null
+          first_response_at: string | null
           id: string
           priority: string
           status: string
           subject: string
+          team_id: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           assigned_to?: string | null
+          closed_at?: string | null
           created_at?: string | null
+          first_response_at?: string | null
           id?: string
           priority?: string
           status?: string
           subject: string
+          team_id?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           assigned_to?: string | null
+          closed_at?: string | null
           created_at?: string | null
+          first_response_at?: string | null
           id?: string
           priority?: string
           status?: string
           subject?: string
+          team_id?: string | null
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "support_conversations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "support_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_internal_notes: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          mentioned_users: string[] | null
+          message: string
+          sender_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          mentioned_users?: string[] | null
+          message: string
+          sender_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          mentioned_users?: string[] | null
+          message?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_internal_notes_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_messages: {
         Row: {
@@ -487,6 +623,133 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tags: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      support_team_members: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: string
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "support_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_teams: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      support_welcome_messages: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean
+          message: string
+          schedule_end: string | null
+          schedule_start: string | null
+          team_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean
+          message: string
+          schedule_end?: string | null
+          schedule_start?: string | null
+          team_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean
+          message?: string
+          schedule_end?: string | null
+          schedule_start?: string | null
+          team_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_welcome_messages_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "support_teams"
             referencedColumns: ["id"]
           },
         ]

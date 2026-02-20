@@ -17,6 +17,9 @@ import {
   LogOut,
   ShieldCheck,
   MessageSquare,
+  UsersRound,
+  BarChart3,
+  MessageSquareText,
 } from "lucide-react";
 import {
   Sidebar,
@@ -159,14 +162,40 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 {userRole === "master" && (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive("/admin/gestao-suporte")}>
-                      <NavLink to="/admin/gestao-suporte" className="hover:bg-muted/50" activeClassName="bg-muted text-primary font-medium">
-                        <ShieldCheck className="h-4 w-4" />
-                        <span>Gestão de Suporte</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  <>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={isActive("/admin/gestao-suporte")}>
+                        <NavLink to="/admin/gestao-suporte" className="hover:bg-muted/50" activeClassName="bg-muted text-primary font-medium">
+                          <ShieldCheck className="h-4 w-4" />
+                          <span>Gestão de Suporte</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={isActive("/admin/equipes")}>
+                        <NavLink to="/admin/equipes" className="hover:bg-muted/50" activeClassName="bg-muted text-primary font-medium">
+                          <UsersRound className="h-4 w-4" />
+                          <span>Equipes</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={isActive("/admin/relatorios-suporte")}>
+                        <NavLink to="/admin/relatorios-suporte" className="hover:bg-muted/50" activeClassName="bg-muted text-primary font-medium">
+                          <BarChart3 className="h-4 w-4" />
+                          <span>Relatórios Suporte</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={isActive("/admin/config-chat")}>
+                        <NavLink to="/admin/config-chat" className="hover:bg-muted/50" activeClassName="bg-muted text-primary font-medium">
+                          <MessageSquareText className="h-4 w-4" />
+                          <span>Config. Chat</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </>
                 )}
               </SidebarMenu>
             </SidebarGroupContent>

@@ -28,6 +28,9 @@ import NotFound from "./pages/NotFound";
 import EstoqueBaixoAlert from "./components/EstoqueBaixoAlert";
 import AdminSuportePanel from "./pages/AdminSuportePanel";
 import GestaoSuporte from "./pages/GestaoSuporte";
+import SuporteEquipes from "./pages/admin/SuporteEquipes";
+import SuporteRelatorios from "./pages/admin/SuporteRelatorios";
+import SuporteConfiguracoes from "./pages/admin/SuporteConfiguracoes";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +73,9 @@ const App = () => (
           <Route path="/nota-fiscal" element={<ProtectedRoute><Layout><NotaFiscal /></Layout></ProtectedRoute>} />
           <Route path="/admin/suporte" element={<ProtectedRoute><Layout><AdminSuportePanel /></Layout></ProtectedRoute>} />
           <Route path="/admin/gestao-suporte" element={<ProtectedRoute><Layout><GestaoSuporte /></Layout></ProtectedRoute>} />
+          <Route path="/admin/equipes" element={<ProtectedRoute><Layout><SuporteEquipes /></Layout></ProtectedRoute>} />
+          <Route path="/admin/relatorios-suporte" element={<ProtectedRoute><Layout><SuporteRelatorios /></Layout></ProtectedRoute>} />
+          <Route path="/admin/config-chat" element={<ProtectedRoute><Layout><SuporteConfiguracoes /></Layout></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
