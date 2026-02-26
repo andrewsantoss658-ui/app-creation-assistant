@@ -26,7 +26,7 @@ export const useSupportTags = () => {
 
   const fetchTags = async () => {
     try {
-      const { data, error } = await (supabase as any).from("support_tags").select("*").order("name");
+      const { data, error } = await supabase.from("support_tags").select("*").order("name");
       if (error) throw error;
       setTags(data || []);
     } catch (e) { console.error(e); } finally { setLoading(false); }
@@ -35,13 +35,13 @@ export const useSupportTags = () => {
   const createTag = async (name: string, color: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Não autenticado");
-    const { error } = await (supabase as any).from("support_tags").insert({ name, color, created_by: user.id });
+    const { error } = await supabase.from("support_tags").insert({ name, color, created_by: user.id });
     if (error) throw error;
     await fetchTags();
   };
 
   const deleteTag = async (id: string) => {
-    const { error } = await (supabase as any).from("support_tags").delete().eq("id", id);
+    const { error } = await supabase.from("support_tags").delete().eq("id", id);
     if (error) throw error;
     await fetchTags();
   };
@@ -59,21 +59,24 @@ export const useConversationTags = (conversationId: string | null) => {
 
   const fetchConversationTags = async () => {
     if (!conversationId) return;
-    const { data } = await (supabase as any).from("conversation_tags").select("*").eq("conversation_id", conversationId);
-    setConversationTags(data || []);
+    try {
+      const { data, error } = await supabase.from("conversation_tags").select("*").eq("conversation_id", conversationId);
+      if (error) throw error;
+      setConversationTags(data || []);
+    } catch (e) { console.error(e); setConversationTags([]); }
   };
 
   const addTag = async (tagId: string) => {
     if (!conversationId) return;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    await (supabase as any).from("conversation_tags").insert({ conversation_id: conversationId, tag_id: tagId, created_by: user.id });
+    await supabase.from("conversation_tags").insert({ conversation_id: conversationId, tag_id: tagId, created_by: user.id });
     await fetchConversationTags();
   };
 
   const removeTag = async (tagId: string) => {
     if (!conversationId) return;
-    await (supabase as any).from("conversation_tags").delete().eq("conversation_id", conversationId).eq("tag_id", tagId);
+    await supabase.from("conversation_tags").delete().eq("conversation_id", conversationId).eq("tag_id", tagId);
     await fetchConversationTags();
   };
 
@@ -110,8 +113,11 @@ export const useInternalNotes = (conversationId: string | null) => {
   const fetchNotes = async () => {
     if (!conversationId) return;
     setLoading(true);
-    const { data } = await (supabase as any).from("support_internal_notes").select("*").eq("conversation_id", conversationId).order("created_at", { ascending: true });
-    setNotes(data || []);
+    try {
+      const { data, error } = await supabase.from("support_internal_notes").select("*").eq("conversation_id", conversationId).order("created_at", { ascending: true });
+      if (error) throw error;
+      setNotes(data || []);
+    } catch (e) { console.error(e); setNotes([]); }
     setLoading(false);
   };
 
@@ -119,7 +125,7 @@ export const useInternalNotes = (conversationId: string | null) => {
     if (!conversationId) return;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Não autenticado");
-    const { error } = await (supabase as any).from("support_internal_notes").insert({
+    const { error } = await supabase.from("support_internal_notes").insert({
       conversation_id: conversationId, sender_id: user.id, message, mentioned_users: mentionedUsers
     });
     if (error) throw error;
@@ -149,8 +155,11 @@ export const useChatTransfers = (conversationId: string | null) => {
 
   const fetchTransfers = async () => {
     if (!conversationId) return;
-    const { data } = await (supabase as any).from("chat_transfers").select("*").eq("conversation_id", conversationId).order("created_at", { ascending: false });
-    setTransfers(data || []);
+    try {
+      const { data, error } = await supabase.from("chat_transfers").select("*").eq("conversation_id", conversationId).order("created_at", { ascending: false });
+      if (error) throw error;
+      setTransfers(data || []);
+    } catch (e) { console.error(e); setTransfers([]); }
   };
 
   const transferChat = async (toUserId: string | null, toTeamId: string | null, reason?: string) => {
@@ -158,13 +167,13 @@ export const useChatTransfers = (conversationId: string | null) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Não autenticado");
     
-    const { error } = await (supabase as any).from("chat_transfers").insert({
+    const { error } = await supabase.from("chat_transfers").insert({
       conversation_id: conversationId, from_user_id: user.id, to_user_id: toUserId, to_team_id: toTeamId, reason
     });
     if (error) throw error;
 
     // Update conversation assignment
-    const updates: any = {};
+    const updates: Record<string, string> = {};
     if (toUserId) updates.assigned_to = toUserId;
     if (toTeamId) updates.team_id = toTeamId;
     
@@ -196,7 +205,7 @@ export const useWelcomeMessages = () => {
 
   const fetchMessages = async () => {
     try {
-      const { data, error } = await (supabase as any).from("support_welcome_messages").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("support_welcome_messages").select("*").order("created_at", { ascending: false });
       if (error) throw error;
       setMessages(data || []);
     } catch (e) { console.error(e); } finally { setLoading(false); }
@@ -205,19 +214,19 @@ export const useWelcomeMessages = () => {
   const createMessage = async (msg: { message: string; team_id?: string | null; schedule_start?: string | null; schedule_end?: string | null }) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Não autenticado");
-    const { error } = await (supabase as any).from("support_welcome_messages").insert({ ...msg, created_by: user.id });
+    const { error } = await supabase.from("support_welcome_messages").insert({ ...msg, created_by: user.id });
     if (error) throw error;
     await fetchMessages();
   };
 
   const updateMessage = async (id: string, updates: Partial<WelcomeMessage>) => {
-    const { error } = await (supabase as any).from("support_welcome_messages").update({ ...updates, updated_at: new Date().toISOString() }).eq("id", id);
+    const { error } = await supabase.from("support_welcome_messages").update({ ...updates, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) throw error;
     await fetchMessages();
   };
 
   const deleteMessage = async (id: string) => {
-    const { error } = await (supabase as any).from("support_welcome_messages").delete().eq("id", id);
+    const { error } = await supabase.from("support_welcome_messages").delete().eq("id", id);
     if (error) throw error;
     await fetchMessages();
   };
@@ -245,56 +254,49 @@ export const useSupportMetrics = () => {
 
   const fetchMetrics = async () => {
     try {
-      // Fetch all conversations
       const { data: conversations } = await supabase.from("support_conversations").select("*");
       const convos = conversations || [];
 
       const total = convos.length;
       const open = convos.filter(c => c.status === "open").length;
 
-      // Avg first response time (conversations that have first_response_at)
-      const withFirstResponse = convos.filter((c: any) => c.first_response_at && c.created_at);
+      const withFirstResponse = convos.filter(c => c.first_response_at && c.created_at);
       const avgFirst = withFirstResponse.length > 0
-        ? withFirstResponse.reduce((sum: number, c: any) => sum + (new Date(c.first_response_at).getTime() - new Date(c.created_at).getTime()), 0) / withFirstResponse.length / 60000
+        ? withFirstResponse.reduce((sum, c) => sum + (new Date(c.first_response_at!).getTime() - new Date(c.created_at!).getTime()), 0) / withFirstResponse.length / 60000
         : 0;
 
-      // Avg resolution time (conversations that are closed)
-      const closed = convos.filter((c: any) => c.closed_at && c.created_at);
+      const closed = convos.filter(c => c.closed_at && c.created_at);
       const avgRes = closed.length > 0
-        ? closed.reduce((sum: number, c: any) => sum + (new Date(c.closed_at).getTime() - new Date(c.created_at).getTime()), 0) / closed.length / 60000
+        ? closed.reduce((sum, c) => sum + (new Date(c.closed_at!).getTime() - new Date(c.created_at!).getTime()), 0) / closed.length / 60000
         : 0;
 
-      // Chats by agent
       const agentMap = new Map<string, number>();
       convos.forEach(c => {
         if (c.assigned_to) agentMap.set(c.assigned_to, (agentMap.get(c.assigned_to) || 0) + 1);
       });
       const chatsByAgent = Array.from(agentMap.entries()).map(([userId, count]) => ({ userId, count }));
 
-      // Chats by team
-      const { data: teams } = await (supabase as any).from("support_teams").select("id, name");
+      const { data: teams } = await supabase.from("support_teams").select("id, name");
       const teamMap = new Map<string, number>();
-      convos.forEach((c: any) => {
+      convos.forEach(c => {
         if (c.team_id) teamMap.set(c.team_id, (teamMap.get(c.team_id) || 0) + 1);
       });
       const chatsByTeam = Array.from(teamMap.entries()).map(([teamId, count]) => {
-        const team = (teams || []).find((t: any) => t.id === teamId);
+        const team = (teams || []).find(t => t.id === teamId);
         return { teamId, teamName: team?.name || "Desconhecido", count };
       });
 
-      // Transfer rate
-      const { data: transfers } = await (supabase as any).from("chat_transfers").select("id");
-      const transferRate = total > 0 ? ((transfers || []).length / total) * 100 : 0;
+      const { data: transfersData } = await supabase.from("chat_transfers").select("id");
+      const transferRate = total > 0 ? ((transfersData || []).length / total) * 100 : 0;
 
-      // Chats by tag
-      const { data: convTags } = await (supabase as any).from("conversation_tags").select("tag_id");
-      const { data: allTags } = await (supabase as any).from("support_tags").select("id, name, color");
+      const { data: convTags } = await supabase.from("conversation_tags").select("tag_id");
+      const { data: allTags } = await supabase.from("support_tags").select("id, name, color");
       const tagCountMap = new Map<string, number>();
-      (convTags || []).forEach((ct: any) => {
+      (convTags || []).forEach(ct => {
         tagCountMap.set(ct.tag_id, (tagCountMap.get(ct.tag_id) || 0) + 1);
       });
       const chatsByTag = Array.from(tagCountMap.entries()).map(([tagId, count]) => {
-        const tag = (allTags || []).find((t: any) => t.id === tagId);
+        const tag = (allTags || []).find(t => t.id === tagId);
         return { tagName: tag?.name || "?", tagColor: tag?.color || "#6366f1", count };
       });
 

@@ -22,16 +22,11 @@ export const useSupportTeams = () => {
   const [teams, setTeams] = useState<SupportTeam[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchTeams();
-  }, []);
+  useEffect(() => { fetchTeams(); }, []);
 
   const fetchTeams = async () => {
     try {
-      const { data, error } = await (supabase as any)
-        .from("support_teams")
-        .select("*")
-        .order("name");
+      const { data, error } = await supabase.from("support_teams").select("*").order("name");
       if (error) throw error;
       setTeams(data || []);
     } catch (e) {
@@ -44,27 +39,19 @@ export const useSupportTeams = () => {
   const createTeam = async (name: string, description?: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Não autenticado");
-    const { error } = await (supabase as any)
-      .from("support_teams")
-      .insert({ name, description, created_by: user.id });
+    const { error } = await supabase.from("support_teams").insert({ name, description: description || null, created_by: user.id });
     if (error) throw error;
     await fetchTeams();
   };
 
   const updateTeam = async (id: string, updates: Partial<Pick<SupportTeam, "name" | "description">>) => {
-    const { error } = await (supabase as any)
-      .from("support_teams")
-      .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq("id", id);
+    const { error } = await supabase.from("support_teams").update({ ...updates, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) throw error;
     await fetchTeams();
   };
 
   const deleteTeam = async (id: string) => {
-    const { error } = await (supabase as any)
-      .from("support_teams")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("support_teams").delete().eq("id", id);
     if (error) throw error;
     await fetchTeams();
   };
@@ -84,10 +71,7 @@ export const useTeamMembers = (teamId?: string) => {
   const fetchMembers = async () => {
     if (!teamId) return;
     try {
-      const { data, error } = await (supabase as any)
-        .from("support_team_members")
-        .select("*")
-        .eq("team_id", teamId);
+      const { data, error } = await supabase.from("support_team_members").select("*").eq("team_id", teamId);
       if (error) throw error;
       setMembers(data || []);
     } catch (e) {
@@ -99,27 +83,19 @@ export const useTeamMembers = (teamId?: string) => {
 
   const addMember = async (userId: string, role: string = "member") => {
     if (!teamId) return;
-    const { error } = await (supabase as any)
-      .from("support_team_members")
-      .insert({ team_id: teamId, user_id: userId, role });
+    const { error } = await supabase.from("support_team_members").insert({ team_id: teamId, user_id: userId, role });
     if (error) throw error;
     await fetchMembers();
   };
 
   const updateMemberRole = async (memberId: string, role: string) => {
-    const { error } = await (supabase as any)
-      .from("support_team_members")
-      .update({ role })
-      .eq("id", memberId);
+    const { error } = await supabase.from("support_team_members").update({ role }).eq("id", memberId);
     if (error) throw error;
     await fetchMembers();
   };
 
   const removeMember = async (memberId: string) => {
-    const { error } = await (supabase as any)
-      .from("support_team_members")
-      .delete()
-      .eq("id", memberId);
+    const { error } = await supabase.from("support_team_members").delete().eq("id", memberId);
     if (error) throw error;
     await fetchMembers();
   };
