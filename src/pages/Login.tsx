@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Package } from "lucide-react";
+import { Wifi } from "lucide-react";
 import logoGestum from "@/assets/logo_gestum.jpg";
 import { formatCpfCnpj } from "@/lib/validators";
 
@@ -40,17 +40,17 @@ const Login = () => {
       // Se não for email, buscar o email pelo CPF/CNPJ
       if (!isEmail(identifier)) {
         const cpfCnpjNumbers = identifier.replace(/\D/g, "");
-        
+
         if (cpfCnpjNumbers.length < 11 || cpfCnpjNumbers.length > 14) {
           throw new Error("Digite um email, CPF ou CNPJ válido");
         }
 
         // Buscar email associado ao CPF/CNPJ na tabela profiles
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("email")
-          .eq("cpf_cnpj", cpfCnpjNumbers)
-          .maybeSingle();
+        const { data: profile, error: profileError } = await supabase.
+        from("profiles").
+        select("email").
+        eq("cpf_cnpj", cpfCnpjNumbers).
+        maybeSingle();
 
         if (profileError) throw profileError;
 
@@ -63,7 +63,7 @@ const Login = () => {
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: emailToUse,
-        password,
+        password
       });
 
       if (error) {
@@ -75,16 +75,16 @@ const Login = () => {
 
       if (data.user) {
         setTimeout(() => {
-          supabase
-            .from("profiles")
-            .select("nome")
-            .eq("id", data.user.id)
-            .maybeSingle()
-            .then(({ data: profile }) => {
-              toast.success(`Bem-vindo, ${profile?.nome || ""}!`);
-            });
+          supabase.
+          from("profiles").
+          select("nome").
+          eq("id", data.user.id).
+          maybeSingle().
+          then(({ data: profile }) => {
+            toast.success(`Bem-vindo, ${profile?.nome || ""}!`);
+          });
         }, 0);
-        
+
         navigate("/dashboard", { replace: true });
       }
     } catch (error: any) {
@@ -96,22 +96,22 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
-      <div 
+      <div
         className="absolute inset-0 opacity-[0.08] dark:opacity-[0.06]"
         style={{
           backgroundImage: `url(${logoGestum})`,
           backgroundSize: '300px 120px',
           backgroundRepeat: 'repeat',
-          backgroundPosition: 'center',
-        }}
-      />
+          backgroundPosition: 'center'
+        }} />
+
       <div className="absolute top-4 right-4 z-10">
         <ThemeToggle />
       </div>
       <Card className="w-full max-w-md relative z-10">
         <CardHeader className="space-y-4 text-center">
           <div className="mx-auto w-16 h-16 bg-primary rounded-2xl flex items-center justify-center">
-            <Package className="w-10 h-10 text-primary-foreground" />
+            <Wifi className="w-10 h-10 bg-primary text-primary" />
           </div>
           <div>
             <CardTitle className="text-3xl font-bold">GESTUM</CardTitle>
@@ -130,8 +130,8 @@ const Login = () => {
                 placeholder="seu@email.com ou CPF/CNPJ"
                 value={identifier}
                 onChange={(e) => handleIdentifierChange(e.target.value)}
-                required
-              />
+                required />
+
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
@@ -141,8 +141,8 @@ const Login = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+                required />
+
             </div>
             <Button type="submit" className="w-full" size="lg" disabled={loading}>
               {loading ? "Entrando..." : "Entrar"}
@@ -153,8 +153,8 @@ const Login = () => {
             <Button
               variant="link"
               className="text-sm p-0 h-auto"
-              onClick={() => navigate("/recuperar-senha")}
-            >
+              onClick={() => navigate("/recuperar-senha")}>
+
               Esqueceu sua senha?
             </Button>
           </div>
@@ -165,16 +165,16 @@ const Login = () => {
               <Button
                 variant="link"
                 className="p-0 h-auto"
-                onClick={() => navigate("/cadastro")}
-              >
+                onClick={() => navigate("/cadastro")}>
+
                 Criar conta
               </Button>
             </p>
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 };
 
 export default Login;
